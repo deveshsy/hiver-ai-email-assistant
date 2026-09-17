@@ -76,3 +76,27 @@ def test_evaluator_rejects_poisoned_response():
     assert res.verdict == "FAIL"
     assert res.composite_score < 50.0
     assert len(res.must_not_contain_violations) > 0
+
+
+def test_critical_recall_is_not_reported_without_critical_examples():
+    email = IncomingEmail(
+        id="noncritical",
+        category="billing",
+        sender="user@example.com",
+        subject="Invoice copy",
+        body="Please send an invoice copy.",
+        must_contain=["invoice"],
+        urgency="low",
+    )
+    reply = SuggestedReply(
+        email_id=email.id,
+        suggested_subject="Re: Invoice copy",
+        suggested_body="Hi,\n\nPlease download the invoice from Billing Settings.\n\nBest,\nSupport",
+        detected_intent="billing",
+        risk_level="low",
+        should_escalate=False,
+    )
+
+    report = ReplyEvaluator(mock_mode=True).evaluate_system([email], [reply])
+
+    assert report.critical_risk_escalation_recall is None

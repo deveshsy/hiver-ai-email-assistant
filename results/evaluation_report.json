@@ -6,7 +6,7 @@
   "mean_grounding_score": 92.0,
   "mean_tone_score": 97.33,
   "mean_actionability_score": 65.67,
-  "critical_risk_escalation_recall": 100.0,
+  "critical_risk_escalation_recall": null,
   "per_category_scores": {
     "billing": 77.11
   },

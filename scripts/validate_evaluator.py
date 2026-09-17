@@ -7,7 +7,9 @@ from typing import List, Dict
 from src.schemas import IncomingEmail, SuggestedReply
 from src.evaluator import ReplyEvaluator
 
-# 10 Paired Calibration Benchmark: 5 Verified High-Quality vs 5 Intentionally Poisoned / Flawed Replies
+# Small, author-labeled calibration set: 5 intended high-quality responses and
+# 5 intentionally poisoned/flawed replies. These labels are illustrative and
+# should be replaced with blinded ratings from multiple reviewers in production.
 CALIBRATION_CASES: List[Dict] = [
     # --- GOOD RESPONSES (Human Grade: 85 - 95, Expected: PASS) ---
     {
@@ -266,7 +268,7 @@ def calculate_pearson_correlation(x: List[float], y: List[float]) -> float:
 
 def run_metric_validation():
     print("=" * 85)
-    print("       METRIC VALIDATION HARNESS: PROVING EVALUATOR ALIGNMENT WITH HUMAN TRUTH")
+    print("       METRIC CALIBRATION HARNESS: COMPARISON WITH AUTHOR-ASSIGNED LABELS")
     print("=" * 85)
 
     evaluator = ReplyEvaluator(mock_mode=True)
@@ -312,7 +314,8 @@ def run_metric_validation():
     print("=" * 85)
     print(f"Verdict Classification Accuracy vs Human:  {accuracy:.1f}% ({correct_verdicts}/{len(CALIBRATION_CASES)})")
     print(f"Pearson Correlation (Human vs Evaluator):  r = {corr:.4f} (Very Strong Positive Correlation)")
-    print(f"Mean Score on High-Quality Responses:     {sum(evaluator_scores[:5])/5:.1f}/100 (All PASS)")
+    good_passes = sum(1 for result in results[:5] if result["evaluator_verdict"] == "PASS")
+    print(f"Mean Score on Intended High-Quality Responses: {sum(evaluator_scores[:5])/5:.1f}/100 ({good_passes}/5 PASS)")
     print(f"Mean Score on Poisoned/Flawed Responses:   {sum(evaluator_scores[5:])/5:.1f}/100 (All FAIL)")
     print("=" * 85)
 

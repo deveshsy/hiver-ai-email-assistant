@@ -24,7 +24,7 @@ python -m pytest tests/test_system.py -v
 ```
 
 ### 3. Run Metric Calibration & Validation Experiment
-Verifies that the evaluator strongly correlates with human quality judgments ($r = 0.9142$) and correctly rejects poisoned/hallucinated replies:
+Compares the evaluator with a small author-labeled calibration set ($r = 0.9142$) and checks that it rejects deliberately poisoned/hallucinated replies:
 ```bash
 python scripts/validate_evaluator.py
 ```
@@ -121,7 +121,7 @@ Otherwise, it receives a **`[FAIL]`**.
 
 ## 🔬 4. Empirical Metric Validation Experiment
 
-To satisfy the challenge requirement—*"How you validate the metric reflects real quality, not just a number"*—we tested our evaluator (`scripts/validate_evaluator.py`) against **10 calibrated ground-truth cases** (5 high-quality human responses vs. 5 deliberately poisoned/flawed responses):
+To investigate whether the metric reflects quality rather than merely producing a number, we tested the evaluator (`scripts/validate_evaluator.py`) against **10 author-labeled calibration cases** (5 intended high-quality responses and 5 deliberately poisoned/flawed responses). This is a small sanity check, not an independent human study; a production validation would use blinded ratings from multiple support agents and inter-rater agreement.
 
 | Case Description | Flaw Type / Strengths | Human Score | Evaluator Score | Verdict Agreement |
 | :--- | :--- | :---: | :---: | :---: |
@@ -137,22 +137,24 @@ To satisfy the challenge requirement—*"How you validate the metric reflects re
 | **Bad #5: Dismissing GDPR Legal Obligation** | Told DPO to click trash can in Gmail | 35.0 | **12.7** | **FAIL / FAIL** ✅ |
 
 ### Validation Results:
-* **Pearson Correlation ($r$):** **`0.9142`** (Very strong positive correlation with human quality).
-* **Verdict Accuracy vs. Human:** **`90.0%`** (9/10 agreement).
+* **Pearson Correlation ($r$):** **`0.9142`** on this small, author-labeled set.
+* **Verdict Agreement with Labels:** **`90.0%`** (9/10 agreement).
 * **Mean Score on High-Quality Responses:** **`84.4 / 100`**
 * **Mean Score on Poisoned/Flawed Responses:** **`23.5 / 100`**
 
-*This mathematically proves the evaluation system reliably penalizes policy hallucinations, tone dismissiveness, and prompt injections while rewarding grounded, actionable support.*
+This provides an initial falsification check: the metric separates these deliberately good and bad examples, while the prompt-injection false negative shows that the rubric still needs refinement. The sample is too small and not independent enough to claim general validity.
 
 ---
 
 ## 📊 5. Realistic System Benchmark & Failure Analysis
 
-Evaluated under live generation (`gemini-3.6-flash`):
+Evaluated on a **3-email billing sample** under live generation (`gemini-3.6-flash`):
 
 * **Mean Composite Score:** **77.11 / 100**
 * **Overall Pass Rate:** **66.7%** (Live model cleanly resolves verified cases, but fails when required specific customer details are omitted).
-* **Critical Risk Escalation Recall:** **100.0%** (100% of executive churn, GDPR Article 17, and severe billing errors triggered human supervisor escalation).
+* **Critical Risk Escalation Recall:** **Not measured** because this 3-email sample contained no critical-urgency examples. Full-dataset runs report this metric when critical examples are present.
+
+These three examples are a smoke-test benchmark, not a statistically representative estimate of production quality.
 
 ### Top Failure Modes Identified:
 1. **Fallback Throttling:** Under free-tier API quotas (15 RPM), burst requests trigger 429 backoff, forcing the system to fall back to grounded templates which miss case-specific tokens.

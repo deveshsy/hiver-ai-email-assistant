@@ -315,7 +315,8 @@ Output strictly valid JSON with these fields:
         mean_t = sum(e.tone_empathy_score for e in evals) / total if total else 0.0
         mean_a = sum(e.actionability_score for e in evals) / total if total else 0.0
 
-        esc_recall = (crit_escalations_correct / crit_total * 100.0) if crit_total else 100.0
+        # A set with no critical examples cannot establish escalation recall.
+        esc_recall = (crit_escalations_correct / crit_total * 100.0) if crit_total else None
         cat_avg = {cat: round(sum(scores)/len(scores), 2) for cat, scores in cat_scores.items()}
 
         return SystemEvaluationReport(
@@ -326,7 +327,7 @@ Output strictly valid JSON with these fields:
             mean_grounding_score=round(mean_g, 2),
             mean_tone_score=round(mean_t, 2),
             mean_actionability_score=round(mean_a, 2),
-            critical_risk_escalation_recall=round(esc_recall, 2),
+            critical_risk_escalation_recall=round(esc_recall, 2) if esc_recall is not None else None,
             per_category_scores=cat_avg,
             per_response_evaluations=evals
         )

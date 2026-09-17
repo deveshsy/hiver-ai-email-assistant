@@ -53,6 +53,9 @@ class SystemEvaluationReport(BaseModel):
     mean_grounding_score: float
     mean_tone_score: float
     mean_actionability_score: float
-    critical_risk_escalation_recall: float
+    critical_risk_escalation_recall: Optional[float] = Field(
+        default=None,
+        description="Percentage of critical emails escalated, or null when the evaluation set has no critical emails",
+    )
     per_category_scores: Dict[str, float]
     per_response_evaluations: List[ResponseEvaluation]

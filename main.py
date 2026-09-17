@@ -99,7 +99,12 @@ def run_pipeline(demo_mode: bool = False, force_mock: bool = False, limit: int =
     print(f"Mean Factual Grounding Score:      {report.mean_grounding_score}/100")
     print(f"Mean Tone & Empathy Score:         {report.mean_tone_score}/100")
     print(f"Mean Actionability Score:          {report.mean_actionability_score}/100")
-    print(f"Critical Risk Escalation Recall:   {report.critical_risk_escalation_recall}%")
+    escalation_recall = (
+        f"{report.critical_risk_escalation_recall}%"
+        if report.critical_risk_escalation_recall is not None
+        else "N/A (no critical examples in this run)"
+    )
+    print(f"Critical Risk Escalation Recall:   {escalation_recall}")
     
     print("\n--- Per-Category Performance Breakdown ---")
     for cat, score in report.per_category_scores.items():
