@@ -176,7 +176,7 @@ def test_low_relevance_abstention():
     assert reply.is_abstention is True
     assert reply.should_escalate is True
     assert "specialist" in reply.suggested_body.lower() or "escalated" in reply.suggested_body.lower()
-    assert "not covered" in reply.suggested_body.lower() or "does not support" in reply.suggested_body.lower()
+    assert "does not confirm" in reply.suggested_body.lower()
 
 def test_correct_paraphrase_passes():
     """Verifies that a semantically identical, correctly paraphrased response passes evaluation."""
@@ -534,10 +534,10 @@ def test_regression_safe_conditional_wording_passes():
         suggested_subject="Re: Duplicate charge on invoice INV-9940",
         suggested_body=(
             "Hi Marcus,\n\nThank you for contacting Hiver Support, and please accept our sincere apologies for the concern regarding INV-9940.\n\n"
-            "I have flagged this ticket for billing verification with our finance team to inspect the duplicate charge on INV-9940. "
+            "This ticket should be routed to our finance team to verify the reported duplicate charge on INV-9940. "
             "If confirmed by our payment gateway records, the billing team can reverse the charge and issue a full refund back to your original payment card, "
             "which typically reflects on your card statement within 3 to 5 business days once processed.\n\n"
-            "This request requires specialist review, and I will monitor this ticket and follow up as soon as verification is complete.\n\n"
+            "A billing specialist should review the payment records before any refund is promised or processed.\n\n"
             "Best regards,\nHiver Support Team"
         ),
         detected_intent="billing_dispute",

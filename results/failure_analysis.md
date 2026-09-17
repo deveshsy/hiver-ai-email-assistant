@@ -58,7 +58,7 @@ Historical resolution replies retrieved from a knowledge base establish company 
 
 ### The Defensive Architecture: Conditional & Proposed Language
 Suggested draft replies must strictly adopt conditional or proposed phrasing:
-* *"I have flagged this ticket for billing verification with our finance team to inspect the duplicate charge."*
+* *"This ticket should be routed to the billing team to verify the reported duplicate charge."*
 * *"If confirmed by our payment gateway records, the billing team can reverse the charge and issue a full refund."*
 * *"This request requires specialist review by our Solutions Engineering team."*
 * Banking clearing intervals (*"typically reflects within 3 to 5 business days once processed"*) and statutory deadlines (*"statutory 30-day timeline under GDPR"*) are permitted as policy explanations, but response SLA guarantees (*"within 2 business hours"*) are prohibited.
@@ -90,5 +90,5 @@ When a customer submits an inquiry with zero knowledge base grounding (e.g. `tes
 * The BM25 retriever scores the query below the minimum relevance threshold (`min_relevance_threshold = 2.5`).
 * The system retrieves **zero** evidence.
 * Rather than fabricating product features, `ResponseGenerator` triggers `_generate_safe_abstention`:
-  > *"Because Hiver does not support direct legacy connectors out of the box and our automated knowledge base cannot confirm custom integration capabilities without manual engineering assessment, this request requires specialist review by our Solutions Engineering team. I have flagged this ticket to be routed to an integration specialist..."*
+  > *"Our available knowledge base does not confirm whether Hiver supports this integration. This request should be routed to a Solutions Engineering specialist for a compatibility assessment."*
 * Evaluator rates this response as high grounding ($92/100$) and passes it, incentivizing models to escalate when uncertain.

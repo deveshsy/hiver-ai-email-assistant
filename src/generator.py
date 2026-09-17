@@ -100,10 +100,10 @@ CORE INSTRUCTIONS & FACTUAL SAFETY:
    Historical replies establish policy but must NEVER be treated as proof that an action occurred for the incoming customer.
    Suggested replies must NEVER claim that records were reviewed, charges confirmed, refunds processed, receipts attached, accounts updated, escalations completed, or response SLAs guaranteed unless an external tool result explicitly proves the action.
    Always use conditional or proposed language:
-   - "I have flagged this ticket for billing verification with our finance team."
+   - "This ticket should be routed to the billing team for verification."
    - "If confirmed, the billing team can reverse the charge and issue a full refund."
    - "This requires specialist review."
-   - "I have flagged this ticket for routing to our Data Protection Officer / Solutions Engineering team."
+   - "This ticket requires review by the Data Protection Officer / Solutions Engineering team."
    - DO NOT promise specific response turnaround windows (e.g. do NOT promise "within 45 minutes" or "within 2 hours").
 4. ESCALATION RULES:
    - If the email involves a critical churn risk (threatening cancellation, lost business deals), legal/GDPR demand (e.g. Article 17 erasure), or formal SLA breach notice, flag `should_escalate: true` with a clear reason.
@@ -163,9 +163,8 @@ Output strictly valid JSON with these exact fields:
         body = (
             f"Hi {sender_name},\n\n"
             f"Thank you for contacting Hiver Support regarding '{email.subject}'.\n\n"
-            f"Because Hiver does not support direct legacy connectors out of the box and our automated knowledge base "
-            f"cannot confirm custom integration capabilities without manual engineering assessment, this request requires specialist review by our Solutions Engineering team. "
-            f"I have flagged this ticket to be routed to an integration specialist who will evaluate compatibility options.\n\n"
+            f"Our available knowledge base does not confirm whether Hiver supports this integration. "
+            f"This request should be routed to a Solutions Engineering specialist for a compatibility assessment.\n\n"
             f"Please let us know if you can provide additional architectural specifications in the meantime.\n\n"
             f"Best regards,\nHiver Support Team"
         )
@@ -241,7 +240,7 @@ Output strictly valid JSON with these exact fields:
                 f"Dear {sender_name},\n\n"
                 f"I sincerely apologize for the severe disruption caused to your operations and the impact on your business. "
                 f"There is no excuse for service downtime or missed customer communication, and I completely understand your frustration.\n\n"
-                f"Because of the critical nature of your account request regarding '{email.subject}', I have flagged this account for urgent escalation "
+                f"Because of the critical nature of your account request regarding '{email.subject}', this ticket requires urgent escalation "
                 f"to our Customer Success leadership and Platform Engineering leads so they can investigate the incident, prepare a Root Cause Analysis (RCA), "
                 f"and review appropriate account credits and contractual cancellation inquiries directly.\n\n"
                 f"Our leadership team will prioritize this review as soon as the preliminary investigation is assembled.\n\n"
@@ -268,7 +267,7 @@ Output strictly valid JSON with these exact fields:
                 f"Dear {sender_name},\n\n"
                 f"Thank you for contacting Hiver. We formally acknowledge receipt of your GDPR Article 17 Right to Erasure request "
                 f"for {user_target}.\n\n"
-                f"I have flagged this ticket for escalation and routing to our Data Protection Officer (DPO) and Security Compliance team. "
+                f"This ticket requires escalation to our Data Protection Officer (DPO) and Security Compliance team. "
                 f"Once identity verification is completed, our team will coordinate the statutory data erasure workflow across all active databases, "
                 f"search indexes, and rolling backup lifecycles to ensure full compliance within our statutory 30-day timeline.\n\n"
                 f"Our DPO will follow up directly with your compliance department upon completion to provide a formal Certificate of Data Destruction.\n\n"
@@ -295,10 +294,10 @@ Output strictly valid JSON with these exact fields:
             body = (
                 f"Hi {sender_name},\n\n"
                 f"Thank you for contacting Hiver Support, and please accept our sincere apologies for the concern regarding {inv_str}.\n\n"
-                f"I have flagged this ticket for billing verification with our finance team to inspect the duplicate charge{amt_str} on {inv_str}. "
+                f"This ticket should be routed to our finance team to verify the reported duplicate charge{amt_str} on {inv_str}. "
                 f"If confirmed by our payment gateway records, the billing team can reverse the charge and issue a full refund back to your original payment card, "
                 f"which typically reflects on your card statement within 3 to 5 business days once processed.\n\n"
-                f"This request requires specialist review, and I will monitor this ticket and follow up as soon as verification is complete.\n\n"
+                f"A billing specialist should review the payment records before any refund is promised or processed.\n\n"
                 f"Best regards,\nHiver Support Team"
             )
             return SuggestedReply(

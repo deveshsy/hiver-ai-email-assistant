@@ -406,7 +406,8 @@ def run_metric_validation():
     good_passes = sum(1 for r in results[:5] if r["evaluator_verdict"] == "PASS")
     bad_fails = sum(1 for r in results[5:] if r["evaluator_verdict"] == "FAIL")
     print(f"Intended High-Quality Responses Passed:             {good_passes}/5 (Mean Score: {sum(evaluator_scores[:5])/5:.1f}/100)")
-    print(f"Deliberately Flawed / Poisoned Responses Failed:    {bad_fails}/6 (Mean Score: {sum(evaluator_scores[5:])/6:.1f}/100)")
+    bad_count = len(results) - 5
+    print(f"Deliberately Flawed / Poisoned Responses Failed:    {bad_fails}/{bad_count} (Mean Score: {sum(evaluator_scores[5:])/bad_count:.1f}/100)")
     print("=" * 95)
 
     os.makedirs("results", exist_ok=True)
@@ -422,7 +423,7 @@ def run_metric_validation():
             "verdict_agreement_pct": accuracy,
             "pearson_correlation": round(corr, 4),
             "good_responses_mean": round(sum(evaluator_scores[:5])/5, 2),
-            "bad_responses_mean": round(sum(evaluator_scores[5:])/6, 2),
+            "bad_responses_mean": round(sum(evaluator_scores[5:])/bad_count, 2),
             "cases": results
         }, f, indent=2)
     print(f"\n[+] Calibration report exported to: {out_file}\n")

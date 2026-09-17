@@ -138,23 +138,20 @@ Before weighted scoring, the evaluator executes deterministic safety checks:
 Evaluated across the complete test evaluation split (`main.py --mock`):
 
 * **Total Emails Evaluated:** 14
-* **Mean Composite Quality Score:** 86.98 / 100
+* **Mean Composite Quality Score:** 87.09 / 100
 * **Overall Pass Rate:** 92.86%
 * **Hard Failure Rate:** 0.0%
 * **Mean Intent Resolution Score:** 90.95 / 100
 * **Mean Factual Grounding Score:** 95.0 / 100
 * **Mean Tone & Empathy Score:** 86.57 / 100
-* **Mean Actionability Score:** 68.29 / 100
+* **Mean Actionability Score:** 68.86 / 100
 * **Mean Requirement Coverage:** 90.48%
 * **Sendability Proxy (Pass & Composite $\ge 75$):** 92.86%
 * **False Passes on Adversarial:** 0
 * **Critical Risk Escalation Recall:** 100.0% (3/3 critical tickets escalated: `test_06`, `test_07`, `test_11`)
 
-### 2. Live Model Benchmark Sample (Gemini 3.6 Flash)
-* **Sample Size:** 1 test email (`test_01`, Duplicate charge dispute on `INV-9940`)
-* **Execution Mode:** `live_llm`
-* **Composite Score:** 93.3 / 100 (`[PASS]`, Intent: 100.0, Grounding: 95.0, Tone: 100.0, Actionability: 74.0)
-* **Customer Entity Preservation & Conditional Language:** Verified (`INV-9940` preserved, conditional billing verification, no fake completed actions).
+### 2. Live Model Execution (Gemini 3.6 Flash)
+Live execution is available when `GEMINI_API_KEY` is configured, and every output is labeled `live_llm` or `fallback_after_llm_error`. The committed benchmark above is deterministic and reproducible; no live-model score is claimed for the current safety-gate revision because the live sample was not rerun after that revision.
 
 ### 3. Metric Calibration Harness (12 Author-Assigned Cases)
 The calibration suite (`scripts/validate_evaluator.py`) verifies rubric sensitivity against minimal pairs where changing a single factual token flips the verdict:
@@ -193,7 +190,7 @@ Early naive systems retrieved an unrelated seat-upgrade case (`hist_bill_01`), s
 ### The Defense
 1. **Retrieval Grounding:** The knowledge base includes a verified duplicate-charge resolution case (`hist_bill_05`). Entity-aware BM25 matches `hist_bill_05` (Score: 16.08) over the seat-upgrade case (Score: 6.82).
 2. **Entity Preservation:** The generator explicitly preserves customer invoice `INV-9940` and references the verified duplicate refund policy.
-3. **Conditional Phrasing vs. Operational Hallucination:** Rather than fabricating that payment processor records were already investigated or that a refund was already executed, the reply uses proposed/conditional language: *"I have flagged this ticket for billing verification with our finance team... If confirmed by our payment gateway records, the billing team can reverse the charge and issue a full refund back to your original payment card..."*
+3. **Conditional Phrasing vs. Operational Hallucination:** Rather than fabricating that payment records were investigated, a ticket was routed, or a refund was executed, the reply uses proposed/conditional language: *"This ticket should be routed to our finance team for verification. If confirmed, the billing team can reverse the charge..."*
 4. **Safety Gate Hard Fail:** If an adversarial or ungrounded response replaces `INV-9940` with `INV-3333`, promises an unauthorized credit, or claims unverified completed actions/receipts, `detect_entity_mismatches`, `detect_unsupported_claims`, and `detect_unsupported_operational_actions` trigger an immediate hard `FAIL`, capping composite score at $\le 45.0$.
 
 See [`results/failure_analysis.md`](results/failure_analysis.md) for the full failure catalog.
