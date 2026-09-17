@@ -118,11 +118,70 @@ def run_pipeline(demo_mode: bool = False, force_mock: bool = False, limit: int =
     print(f"\n[+] Full evaluation report exported to: {report_file}")
     print_separator()
 
+def handle_single_email(body_text: str, subject: str = "Support Inquiry", force_mock: bool = False):
+    """Processes an ad-hoc incoming email for live testing and demonstration."""
+    print_separator("=")
+    print("      HIVER AI EMAIL ASSISTANT — INTERACTIVE SUGGESTION MODE")
+    print_separator("=")
+    print(f"Incoming Subject:  {subject}")
+    print(f"Incoming Body:     {body_text.strip()}")
+    print_separator("-")
+
+    email = IncomingEmail(
+        id="adhoc_custom",
+        category="inquiry",
+        sender="customer@external.io",
+        subject=subject,
+        body=body_text,
+        urgency="medium"
+    )
+
+    retriever = EmailRetriever()
+    similar_cases = retriever.retrieve_similar_cases(subject, body_text, top_k=2)
+
+    print("[*] Retrieved Top-2 Relevant Historical Cases:")
+    for i, c in enumerate(similar_cases, 1):
+        print(f"    [{i}] ID: {c.id} | Subject: '{c.subject}' | Category: {c.category}")
+    print_separator("-")
+
+    generator = ResponseGenerator(mock_mode=force_mock, retriever=retriever)
+    reply = generator.generate_reply(email)
+
+    print("\n--- SUGGESTED REPLY GENERATED ---")
+    print(f"Suggested Subject: {reply.suggested_subject}")
+    print(f"Detected Intent:   {reply.detected_intent}")
+    print(f"Assessed Risk:     {reply.risk_level.upper()}")
+    if reply.should_escalate:
+        print(f"⚠️  ESCALATION REQUIRED: {reply.escalation_reason}")
+    else:
+        print("✅ ROUTE: Auto-handled by agent")
+    print("\nBody:\n")
+    print(reply.suggested_body)
+    print_separator("-")
+
+    # Run Evaluator
+    evaluator = ReplyEvaluator(mock_mode=True)
+    ev = evaluator.evaluate_single_response(email, reply)
+    print("--- EVALUATOR SCORING & POLICY CHECK ---")
+    print(f"Composite Score:   {ev.composite_score}/100 -> Verdict: [{ev.verdict}]")
+    print(f"Intent Resolution: {ev.intent_resolution_score}/100")
+    print(f"Factual Grounding: {ev.factual_grounding_score}/100")
+    print(f"Tone & Empathy:    {ev.tone_empathy_score}/100")
+    print(f"Actionability:     {ev.actionability_score}/100")
+    print(f"Rubric Feedback:   {ev.feedback}")
+    print_separator("=")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Hiver AI Email Response & Accuracy System")
     parser.add_argument("--demo", action="store_true", help="Run quick 2-email evaluation demo")
     parser.add_argument("--mock", action="store_true", help="Run in deterministic mock mode without API calls")
     parser.add_argument("--limit", type=int, default=0, help="Limit number of emails to evaluate")
+    parser.add_argument("--reply", type=str, default=None, help="Generate and evaluate a suggested reply for an ad-hoc custom incoming email")
+    parser.add_argument("--subject", type=str, default="Customer Support Inquiry", help="Subject line for ad-hoc customer email (used with --reply)")
     args = parser.parse_args()
 
-    run_pipeline(demo_mode=args.demo, force_mock=args.mock, limit=args.limit)
+    if args.reply:
+        handle_single_email(body_text=args.reply, subject=args.subject, force_mock=args.mock)
+    else:
+        run_pipeline(demo_mode=args.demo, force_mock=args.mock, limit=args.limit)
+

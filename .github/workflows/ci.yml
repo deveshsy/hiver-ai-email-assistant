@@ -1,0 +1,41 @@
+name: CI Suite
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test & Evaluate
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Automated Unit Tests (pytest)
+        run: |
+          pytest tests/test_system.py -v
+
+      - name: Run Evaluator Calibration Benchmark
+        run: |
+          python scripts/validate_evaluator.py
+
+      - name: Run Deterministic Pipeline (Mock Mode)
+        run: |
+          python main.py --mock

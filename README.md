@@ -1,7 +1,8 @@
 # Hiver AI Email Suggested-Response & Evaluation System
 **Candidate:** Devesh Singh Yadav  
 **Challenge:** Hiver 100-Minute Open Challenge — Generative AI Email Assistant & Accuracy Engine  
-**Repository:** [https://github.com/deveshsy/hiver-ai-email-assistant](https://github.com/deveshsy/hiver-ai-email-assistant)
+**Repository:** [https://github.com/deveshsy/hiver-ai-email-assistant](https://github.com/deveshsy/hiver-ai-email-assistant)  
+[![CI Suite](https://github.com/deveshsy/hiver-ai-email-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/deveshsy/hiver-ai-email-assistant/actions)
 
 ---
 
@@ -18,7 +19,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Run Automated Unit Tests (0.15s)
+### 2. Run Automated Unit Tests (0.2s)
 ```bash
 python -m pytest tests/test_system.py -v
 ```
@@ -39,6 +40,9 @@ python main.py --demo
 
 # Option C: Run zero-dependency deterministic benchmark (no API key required)
 python main.py --mock
+
+# Option D: Test interactive reply generation on an ad-hoc custom email
+python main.py --mock --reply "Our card was charged twice on invoice INV-9940. Please reverse this immediately."
 ```
 
 Outputs are streamed in real time to the terminal and exported to `results/evaluation_report.json`.
@@ -167,3 +171,32 @@ In compliance with the challenge rules:
 * **Code Assistant Usage:** Google Antigravity / Gemini was used for code scaffolding, typing schemas, and test structuring during the 100-minute sprint.
 * **Human Architectural Direction:** The Okapi BM25 retrieval mathematics, multi-dimensional scoring rubric, disjunction requirement parser, and the 10-case calibration experiment were designed and verified directly.
 * **Secrets Management:** Zero API keys committed (`.env` strictly excluded in `.gitignore`).
+
+---
+
+## 🔮 7. If I Had Another 100 Minutes (Production Roadmap & Architectural Evolutions)
+
+If given another 100-minute engineering block, I would implement the following five production enhancements:
+
+### 1. Benchmark TypeSafe AI's New "Jev" Model for System-1 Decision Triage
+* **Context:** TypeSafe AI emerged from stealth (September 2026, founded by former OpenAI researcher Diogo Almeida & team) with **Jev** — a machine-native "System One" decision model engineered specifically for fast, typed, schema-constrained software decisions (70–150ms latency, unmetered output tokens).
+* **Architecture:** Decouple monolithic generation into a two-tier cascade:
+  1. **System 1 (Jev):** Incoming customer emails pass through Jev to deterministically classify intent, extract entity metadata (e.g. invoice IDs, seat numbers), and evaluate risk escalation rules with strict type safety and zero hallucination risk.
+  2. **System 2 (Generative LLM):** Only trigger an autoregressive model (Gemini / Claude) when an auto-generated draft is actually required, slashing latency by >75% and eliminating quota consumption on pure triage queries.
+
+### 2. Hybrid Retrieval: Dense Semantic Embeddings + Okapi BM25 with Reciprocal Rank Fusion (RRF)
+* While Okapi BM25 provides mathematically rigorous exact keyword and ID matching (crucial for error codes and invoice references), it struggles with semantic paraphrasing (e.g., *"We want our agreement terminated"* vs. *"cancellation"*).
+* Combine BM25 with dense sentence embeddings (e.g. `text-embedding-004` or `bge-large`) and fuse ranks via Reciprocal Rank Fusion:
+  $$RRF(d) = \sum_{m \in M} \frac{1}{60 + r_m(d)}$$
+
+### 3. Multi-Turn Thread History & Conversational State Tracking
+* Customer support in shared inboxes is conversational, not single-turn. Incorporate full thread context, tracking customer sentiment velocity, open commitments from previous agent messages, and attachments across multiple turns.
+
+### 4. Blinded Multi-Annotator Human Calibration Study
+* Scale our 10-pair metric calibration set to 150+ production tickets labeled independently by 3 senior support leads. Calculate inter-annotator agreement (Cohen's $\kappa$ and Spearman's $\rho$) to fine-tune rubric weights and eliminate false-negative boundary cases (e.g., safe prompt-injection refusals).
+
+### 5. Human-in-the-Loop Active Learning Loop (DPO Preference Pairs)
+* In a live Hiver shared inbox, customer support reps edit, reject, or accept suggested drafts. Every human edit creates a natural preference pair:
+  $$(y_{\text{accepted}}, y_{\text{generated}})$$
+* Route these pairs into Direct Preference Optimization (DPO) fine-tuning and dynamically index accepted resolutions back into the few-shot RAG corpus for continuous self-improving suggestions.
+

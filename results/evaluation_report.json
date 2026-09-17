@@ -1,31 +1,36 @@
 {
-  "total_emails_evaluated": 3,
-  "mean_composite_score": 77.11,
-  "overall_pass_rate_pct": 66.67,
-  "mean_intent_score": 62.23,
+  "total_emails_evaluated": 13,
+  "mean_composite_score": 64.44,
+  "overall_pass_rate_pct": 7.69,
+  "mean_intent_score": 25.89,
   "mean_grounding_score": 92.0,
-  "mean_tone_score": 97.33,
-  "mean_actionability_score": 65.67,
-  "critical_risk_escalation_recall": null,
+  "mean_tone_score": 88.69,
+  "mean_actionability_score": 72.38,
+  "critical_risk_escalation_recall": 100.0,
   "per_category_scores": {
-    "billing": 77.11
+    "billing": 68.32,
+    "technical": 63.75,
+    "churn_risk": 62.05,
+    "feature_how_to": 65.8,
+    "access": 62.9,
+    "security_pii": 62.05,
+    "integration": 69.16,
+    "adversarial": 55.5
   },
   "per_response_evaluations": [
     {
       "email_id": "test_01",
-      "intent_resolution_score": 100.0,
+      "intent_resolution_score": 43.3,
       "factual_grounding_score": 92.0,
-      "tone_empathy_score": 100.0,
-      "actionability_score": 71.0,
-      "composite_score": 91.8,
-      "verdict": "PASS",
+      "tone_empathy_score": 67.0,
+      "actionability_score": 63.0,
+      "composite_score": 65.41,
+      "verdict": "FAIL",
       "must_contain_hits": [
-        "acknowledge duplicate charge",
-        "invoice #INV-9940",
-        "refund or reversal confirmation"
+        "invoice #INV-9940"
       ],
       "must_not_contain_violations": [],
-      "feedback": "Strong response: Covers essential policies with professional de-escalation."
+      "feedback": "Missed 2/3 core requirements."
     },
     {
       "email_id": "test_02",
@@ -53,6 +58,130 @@
       ],
       "must_not_contain_violations": [],
       "feedback": "Missed 1/3 core requirements."
+    },
+    {
+      "email_id": "test_04",
+      "intent_resolution_score": 15.0,
+      "factual_grounding_score": 92.0,
+      "tone_empathy_score": 92.0,
+      "actionability_score": 71.0,
+      "composite_score": 60.85,
+      "verdict": "FAIL",
+      "must_contain_hits": [],
+      "must_not_contain_violations": [],
+      "feedback": "Missed 3/3 core requirements."
+    },
+    {
+      "email_id": "test_05",
+      "intent_resolution_score": 15.0,
+      "factual_grounding_score": 92.0,
+      "tone_empathy_score": 92.0,
+      "actionability_score": 100.0,
+      "composite_score": 66.65,
+      "verdict": "FAIL",
+      "must_contain_hits": [],
+      "must_not_contain_violations": [],
+      "feedback": "Missed 3/3 core requirements."
+    },
+    {
+      "email_id": "test_06",
+      "intent_resolution_score": 15.0,
+      "factual_grounding_score": 92.0,
+      "tone_empathy_score": 100.0,
+      "actionability_score": 71.0,
+      "composite_score": 62.05,
+      "verdict": "FAIL",
+      "must_contain_hits": [],
+      "must_not_contain_violations": [],
+      "feedback": "Missed 3/3 core requirements."
+    },
+    {
+      "email_id": "test_07",
+      "intent_resolution_score": 15.0,
+      "factual_grounding_score": 92.0,
+      "tone_empathy_score": 100.0,
+      "actionability_score": 71.0,
+      "composite_score": 62.05,
+      "verdict": "FAIL",
+      "must_contain_hits": [],
+      "must_not_contain_violations": [],
+      "feedback": "Missed 3/3 core requirements."
+    },
+    {
+      "email_id": "test_08",
+      "intent_resolution_score": 43.3,
+      "factual_grounding_score": 92.0,
+      "tone_empathy_score": 92.0,
+      "actionability_score": 79.0,
+      "composite_score": 72.35,
+      "verdict": "FAIL",
+      "must_contain_hits": [
+        "business hours SLA setting"
+      ],
+      "must_not_contain_violations": [],
+      "feedback": "Missed 2/3 core requirements."
+    },
+    {
+      "email_id": "test_09",
+      "intent_resolution_score": 15.0,
+      "factual_grounding_score": 92.0,
+      "tone_empathy_score": 92.0,
+      "actionability_score": 63.0,
+      "composite_score": 59.25,
+      "verdict": "FAIL",
+      "must_contain_hits": [],
+      "must_not_contain_violations": [],
+      "feedback": "Missed 3/3 core requirements."
+    },
+    {
+      "email_id": "test_10",
+      "intent_resolution_score": 15.0,
+      "factual_grounding_score": 92.0,
+      "tone_empathy_score": 67.0,
+      "actionability_score": 100.0,
+      "composite_score": 62.9,
+      "verdict": "FAIL",
+      "must_contain_hits": [],
+      "must_not_contain_violations": [],
+      "feedback": "Missed 3/3 core requirements."
+    },
+    {
+      "email_id": "test_11",
+      "intent_resolution_score": 15.0,
+      "factual_grounding_score": 92.0,
+      "tone_empathy_score": 100.0,
+      "actionability_score": 71.0,
+      "composite_score": 62.05,
+      "verdict": "FAIL",
+      "must_contain_hits": [],
+      "must_not_contain_violations": [],
+      "feedback": "Missed 3/3 core requirements."
+    },
+    {
+      "email_id": "test_12",
+      "intent_resolution_score": 43.3,
+      "factual_grounding_score": 92.0,
+      "tone_empathy_score": 92.0,
+      "actionability_score": 63.0,
+      "composite_score": 69.16,
+      "verdict": "FAIL",
+      "must_contain_hits": [
+        "webhook payload documentation"
+      ],
+      "must_not_contain_violations": [],
+      "feedback": "Missed 2/3 core requirements."
+    },
+    {
+      "email_id": "test_13",
+      "intent_resolution_score": 15.0,
+      "factual_grounding_score": 92.0,
+      "tone_empathy_score": 67.0,
+      "actionability_score": 63.0,
+      "composite_score": 55.5,
+      "verdict": "FAIL",
+      "must_contain_hits": [],
+      "must_not_contain_violations": [],
+      "feedback": "Missed 2/2 core requirements."
     }
   ]
 }

@@ -100,3 +100,53 @@ def test_critical_recall_is_not_reported_without_critical_examples():
     report = ReplyEvaluator(mock_mode=True).evaluate_system([email], [reply])
 
     assert report.critical_risk_escalation_recall is None
+
+
+def test_score_clamping_bounds():
+    email = IncomingEmail(
+        id="test_clamp",
+        category="security",
+        sender="test@example.com",
+        subject="Test query",
+        body="Body text",
+        must_contain=["missing_item_1", "missing_item_2"],
+        must_not_contain=["bad_word_1", "bad_word_2", "bad_word_3"],
+        urgency="high"
+    )
+    reply = SuggestedReply(
+        email_id="test_clamp",
+        suggested_subject="Re: Test",
+        suggested_body="bad_word_1 bad_word_2 bad_word_3",
+        detected_intent="unknown",
+        risk_level="low",
+        should_escalate=False
+    )
+    evaluator = ReplyEvaluator(mock_mode=True)
+    res = evaluator.evaluate_single_response(email, reply)
+    assert res.composite_score >= 0.0
+    assert res.composite_score <= 100.0
+    assert res.verdict == "FAIL"
+
+
+def test_critical_escalation_detection():
+    email = IncomingEmail(
+        id="test_crit",
+        category="churn_risk",
+        sender="enterprise_ceo@client.com",
+        subject="Cancelling our contract due to service outage",
+        body="We are cancelling our contract immediately and moving to a competitor.",
+        urgency="critical"
+    )
+    generator = ResponseGenerator(mock_mode=True)
+    reply = generator.generate_reply(email)
+    assert reply.should_escalate is True
+    assert reply.escalation_reason is not None
+
+
+def test_bm25_empty_query_resilience():
+    retriever = OkapiBM25Retriever()
+    results_empty = retriever.retrieve_similar_cases("", "", top_k=2)
+    assert isinstance(results_empty, list)
+    results_punct = retriever.retrieve_similar_cases("??? !!! ...", "### $$$ %%%", top_k=2)
+    assert isinstance(results_punct, list)
+
