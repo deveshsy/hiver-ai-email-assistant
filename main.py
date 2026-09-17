@@ -8,7 +8,14 @@ from typing import List
 from src.schemas import IncomingEmail, SuggestedReply
 from src.retriever import EmailRetriever
 from src.generator import ResponseGenerator
-from src.evaluator import ReplyEvaluator
+from src.evaluator import (
+    ReplyEvaluator,
+    RED_LINE_PENALTY,
+    PASS_COMPOSITE_THRESHOLD,
+    PASS_INTENT_THRESHOLD,
+    PASS_GROUNDING_THRESHOLD,
+    SENDABILITY_COMPOSITE_THRESHOLD
+)
 
 def load_test_emails(path: str = "data/test_emails.jsonl") -> List[IncomingEmail]:
     """Loads test email dataset, auto-building if missing."""
@@ -40,15 +47,15 @@ def run_pipeline(demo_mode: bool = False, force_mock: bool = False, limit: int =
         test_set = all_emails[:limit]
     else:
         test_set = all_emails
-    print(f"[*] Loaded {len(test_set)} test emails for evaluation (Demo Mode: {demo_mode})")
+    print(f"[*] Loaded {len(test_set)} distinct test emails for evaluation (Demo Mode: {demo_mode})")
 
     # 2. Initialize Components
     retriever = EmailRetriever()
     generator = ResponseGenerator(mock_mode=force_mock, retriever=retriever)
-    evaluator = ReplyEvaluator(mock_mode=force_mock)
+    evaluator = ReplyEvaluator(mock_mode=force_mock, retriever=retriever)
 
-    mode_str = "DETERMINISTIC MOCK" if generator.mock_mode else f"LIVE GEMINI ({generator.model_name})"
-    print(f"[*] Execution Mode: {mode_str}")
+    init_mode = "DETERMINISTIC DEMO (Offline Heuristic)" if generator.mock_mode else f"LIVE GEMINI ({generator.model_name})"
+    print(f"[*] Configured Execution Mode: {init_mode}")
     print_separator("-")
 
     # 3. Generate and Evaluate per response
@@ -61,8 +68,8 @@ def run_pipeline(demo_mode: bool = False, force_mock: bool = False, limit: int =
         reply = generator.generate_reply(email)
         generated_replies.append(reply)
         
-        # Pacing to avoid free-tier API quota spikes
-        if not generator.mock_mode:
+        # Pacing to avoid free-tier API quota spikes when running live
+        if reply.execution_mode == "live_llm":
             time.sleep(2.0)
 
         # Evaluate single response
@@ -72,17 +79,21 @@ def run_pipeline(demo_mode: bool = False, force_mock: bool = False, limit: int =
         esc_str = f"YES ({reply.escalation_reason})" if reply.should_escalate else "NO (Auto-handled)"
         color_verdict = f"[PASS]" if eval_res.verdict == "PASS" else "[FAIL]"
         
+        print(f"    Execution Mode: {reply.execution_mode}")
         print(f"    Intent:        {reply.detected_intent}")
         print(f"    Escalate:      {esc_str}")
+        print(f"    Retrieval:     IDs: {reply.retrieved_case_ids} | Scores: {reply.retrieval_scores}")
         print(f"    Scores:        Intent: {eval_res.intent_resolution_score}/100 | Grounding: {eval_res.factual_grounding_score}/100 | Tone: {eval_res.tone_empathy_score}/100 | Actionability: {eval_res.actionability_score}/100")
-        print(f"    Composite:     {eval_res.composite_score}/100 -> Verdict: {color_verdict}")
+        print(f"    Composite:     {eval_res.composite_score}/100 -> Verdict: {color_verdict} (Pass Threshold: >={PASS_COMPOSITE_THRESHOLD})")
+        print(f"    Coverage:      {eval_res.requirement_coverage_pct}% ({len(eval_res.must_contain_hits)}/{len(email.must_contain)} required)")
         print(f"    Feedback:      {eval_res.feedback}")
+        if eval_res.hard_fail_reasons:
+            print(f"    HARD FAILS:    {eval_res.hard_fail_reasons}")
         if eval_res.must_not_contain_violations:
-            print(f"    VIOLATIONS:    {eval_res.must_not_contain_violations} (-15 penalty applied)")
+            print(f"    VIOLATIONS:    {eval_res.must_not_contain_violations} (-{RED_LINE_PENALTY} penalty applied per violation)")
         print()
 
-        # Pacing between emails
-        if not generator.mock_mode and idx < len(test_set):
+        if reply.execution_mode == "live_llm" and idx < len(test_set):
             time.sleep(2.5)
 
     # 4. System-Wide Aggregate Report
@@ -95,10 +106,15 @@ def run_pipeline(demo_mode: bool = False, force_mock: bool = False, limit: int =
     print(f"Total Emails Evaluated:            {report.total_emails_evaluated}")
     print(f"Mean Composite Quality Score:      {report.mean_composite_score}/100")
     print(f"Overall Pass Rate:                 {report.overall_pass_rate_pct}%")
+    print(f"Hard Failure Rate:                 {report.hard_failure_rate_pct}%")
     print(f"Mean Intent Resolution Score:      {report.mean_intent_score}/100")
     print(f"Mean Factual Grounding Score:      {report.mean_grounding_score}/100")
     print(f"Mean Tone & Empathy Score:         {report.mean_tone_score}/100")
     print(f"Mean Actionability Score:          {report.mean_actionability_score}/100")
+    print(f"Mean Requirement Coverage:         {report.mean_requirement_coverage_pct}%")
+    print(f"Sendability Proxy (Pass & >=75):   {report.sendability_proxy_pct}%")
+    print(f"False Passes on Adversarial:       {report.false_pass_count_adversarial}")
+
     escalation_recall = (
         f"{report.critical_risk_escalation_recall}%"
         if report.critical_risk_escalation_recall is not None
@@ -133,21 +149,24 @@ def handle_single_email(body_text: str, subject: str = "Support Inquiry", force_
         sender="customer@external.io",
         subject=subject,
         body=body_text,
-        urgency="medium"
+        urgency="high" if any(w in body_text.lower() for w in ["cancel", "immediately", "urgent", "twice", "breach"]) else "medium"
     )
 
     retriever = EmailRetriever()
-    similar_cases = retriever.retrieve_similar_cases(subject, body_text, top_k=2)
+    similar_pairs = retriever.retrieve_with_scores(subject, body_text, top_k=2)
 
-    print("[*] Retrieved Top-2 Relevant Historical Cases:")
-    for i, c in enumerate(similar_cases, 1):
-        print(f"    [{i}] ID: {c.id} | Subject: '{c.subject}' | Category: {c.category}")
+    print("[*] Retrieved Relevant Historical Cases:")
+    if not similar_pairs:
+        print("    [!] None above minimum relevance threshold (Relevance < 2.5). Safe abstention will trigger.")
+    for i, (c, score) in enumerate(similar_pairs, 1):
+        print(f"    [{i}] ID: {c.id} | Score: {score} | Base: {c.base_case_id} | Subject: '{c.subject}'")
     print_separator("-")
 
     generator = ResponseGenerator(mock_mode=force_mock, retriever=retriever)
     reply = generator.generate_reply(email)
 
     print("\n--- SUGGESTED REPLY GENERATED ---")
+    print(f"Execution Mode:    {reply.execution_mode}")
     print(f"Suggested Subject: {reply.suggested_subject}")
     print(f"Detected Intent:   {reply.detected_intent}")
     print(f"Assessed Risk:     {reply.risk_level.upper()}")
@@ -160,7 +179,7 @@ def handle_single_email(body_text: str, subject: str = "Support Inquiry", force_
     print_separator("-")
 
     # Run Evaluator
-    evaluator = ReplyEvaluator(mock_mode=True)
+    evaluator = ReplyEvaluator(mock_mode=True, retriever=retriever)
     ev = evaluator.evaluate_single_response(email, reply)
     print("--- EVALUATOR SCORING & POLICY CHECK ---")
     print(f"Composite Score:   {ev.composite_score}/100 -> Verdict: [{ev.verdict}]")
@@ -168,13 +187,16 @@ def handle_single_email(body_text: str, subject: str = "Support Inquiry", force_
     print(f"Factual Grounding: {ev.factual_grounding_score}/100")
     print(f"Tone & Empathy:    {ev.tone_empathy_score}/100")
     print(f"Actionability:     {ev.actionability_score}/100")
+    print(f"Sendable Proxy:    {'YES' if ev.is_sendable else 'NO'}")
+    if ev.hard_fail_reasons:
+        print(f"HARD FAILS:        {ev.hard_fail_reasons}")
     print(f"Rubric Feedback:   {ev.feedback}")
     print_separator("=")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Hiver AI Email Response & Accuracy System")
     parser.add_argument("--demo", action="store_true", help="Run quick 2-email evaluation demo")
-    parser.add_argument("--mock", action="store_true", help="Run in deterministic mock mode without API calls")
+    parser.add_argument("--mock", action="store_true", help="Run in deterministic demo mode without API calls")
     parser.add_argument("--limit", type=int, default=0, help="Limit number of emails to evaluate")
     parser.add_argument("--reply", type=str, default=None, help="Generate and evaluate a suggested reply for an ad-hoc custom incoming email")
     parser.add_argument("--subject", type=str, default="Customer Support Inquiry", help="Subject line for ad-hoc customer email (used with --reply)")
@@ -184,4 +206,3 @@ if __name__ == "__main__":
         handle_single_email(body_text=args.reply, subject=args.subject, force_mock=args.mock)
     else:
         run_pipeline(demo_mode=args.demo, force_mock=args.mock, limit=args.limit)
-
