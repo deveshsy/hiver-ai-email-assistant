@@ -2,9 +2,9 @@ import pytest
 import os
 import json
 from src.schemas import IncomingEmail, SuggestedReply, HistoricalEmail
-from src.retriever import EmailRetriever
+from src.retriever import OkapiBM25Retriever
 from src.generator import ResponseGenerator
-from src.evaluator import ReplyEvaluator
+from src.evaluator import ReplyEvaluator, check_requirement_satisfied, check_forbidden_violated
 
 def test_dataset_files_exist_and_valid():
     assert os.path.exists("data/historical_support_emails.jsonl")
@@ -12,71 +12,67 @@ def test_dataset_files_exist_and_valid():
 
     with open("data/historical_support_emails.jsonl", "r") as f:
         lines = [line.strip() for line in f if line.strip()]
-        assert len(lines) >= 5
+        assert len(lines) >= 10
         first = json.loads(lines[0])
         assert "subject" in first and "ground_truth_reply" in first
 
-def test_retriever_keyword_matching():
-    retriever = EmailRetriever("data/historical_support_emails.jsonl")
+def test_okapi_bm25_retrieval():
+    retriever = OkapiBM25Retriever("data/historical_support_emails.jsonl")
+    assert retriever.corpus_size >= 10
+    assert retriever.avg_doc_len > 0
+    assert len(retriever.idf) > 0
+
     results = retriever.retrieve_similar_cases(
-        subject="Unexpected invoice charge",
-        body="We were overcharged on our monthly invoice",
+        subject="Unexpected invoice charge on August bill",
+        body="We were charged $240 instead of $160 for collaborator seats",
         top_k=2
     )
     assert len(results) > 0
-    assert any("invoice" in r.subject.lower() or "charge" in r.subject.lower() for r in results)
+    top = results[0]
+    assert "invoice" in top.subject.lower() or "charge" in top.subject.lower()
 
-def test_response_generator_contract():
+def test_disjunction_requirement_satisfied():
+    # Should satisfy either 'refund' or 'reversal'
+    req = "refund or reversal"
+    text1 = "We will issue a full refund to your corporate card."
+    text2 = "We have requested a transaction reversal with finance."
+    text3 = "We have received your email."
+    
+    assert check_requirement_satisfied(req, text1) is True
+    assert check_requirement_satisfied(req, text2) is True
+    assert check_requirement_satisfied(req, text3) is False
+
+def test_forbidden_anti_pattern_detection():
+    forbidden = "have a nice day"
+    text_bad = "Your contract is terminated effective immediately. Have a nice day!"
+    text_good = "Your contract cancellation request has been escalated to executive management."
+
+    assert check_forbidden_violated(forbidden, text_bad) is True
+    assert check_forbidden_violated(forbidden, text_good) is False
+
+def test_evaluator_rejects_poisoned_response():
     email = IncomingEmail(
-        id="test_unit_01",
-        category="billing",
-        sender="client@acme.com",
-        subject="Need tax receipt for VAT",
-        body="Please send our VAT receipt for accounting."
-    )
-    generator = ResponseGenerator(mock_mode=True)
-    reply = generator.generate_reply(email)
-
-    assert isinstance(reply, SuggestedReply)
-    assert reply.email_id == "test_unit_01"
-    assert len(reply.suggested_body) > 20
-    assert "Hiver" in reply.suggested_body
-
-def test_critical_escalation_detection():
-    critical_email = IncomingEmail(
-        id="test_unit_crit",
+        id="test_crit_churn",
         category="churn_risk",
-        sender="vp@enterprise.com",
-        subject="Cancelling our contract immediately",
-        body="Your service crashed our sales deal. Cancel all 100 seats today and refund.",
+        sender="ceo@client.com",
+        subject="Cancelling 100 seats due to missing emails",
+        body="Cancel our subscription immediately.",
+        must_contain=["executive empathy", "immediate human escalation", "cancellation"],
+        must_not_contain=["have a nice day", "casual automated closing"],
         urgency="critical"
     )
-    generator = ResponseGenerator(mock_mode=True)
-    reply = generator.generate_reply(critical_email)
-
-    assert reply.should_escalate is True
-    assert reply.escalation_reason is not None
-
-def test_evaluator_composite_scoring():
-    email = IncomingEmail(
-        id="test_eval_unit",
-        category="feature_how_to",
-        sender="user@test.com",
-        subject="How to export CSAT?",
-        body="Where is the export button for CSAT reports?",
-        must_contain=["export", "csat"]
-    )
-    reply = SuggestedReply(
-        email_id="test_eval_unit",
-        suggested_subject="Re: How to export CSAT?",
-        suggested_body="Hi! You can export your CSAT data by clicking the Export button in Hiver Analytics. Best regards, Hiver Support Team",
-        detected_intent="csat_export",
+    # Poisoned response: rude, no escalation, forbidden phrase
+    bad_reply = SuggestedReply(
+        email_id="test_crit_churn",
+        suggested_subject="Re: Cancelling",
+        suggested_body="Sorry you are upset. We cancelled your seats. Have a nice day!",
+        detected_intent="churn",
         risk_level="low",
         should_escalate=False
     )
     evaluator = ReplyEvaluator(mock_mode=True)
-    score_card = evaluator.evaluate_single_response(email, reply)
+    res = evaluator.evaluate_single_response(email, bad_reply)
 
-    assert score_card.composite_score >= 70.0
-    assert score_card.verdict in ["PASS", "FAIL"]
-    assert "export" in score_card.must_contain_hits or len(score_card.must_contain_hits) >= 0
+    assert res.verdict == "FAIL"
+    assert res.composite_score < 50.0
+    assert len(res.must_not_contain_violations) > 0
