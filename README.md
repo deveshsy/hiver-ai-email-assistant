@@ -25,11 +25,11 @@ python -m pytest tests/test_system.py -v
 
 ### 3. Run End-to-End Suggested-Response & Accuracy System
 ```bash
-# Option A: Run with live Gemini 3.6 Flash (requires GEMINI_API_KEY in .env or environment)
-python main.py
-
-# Option B: Run rapid 2-email demo
+# Option A: Run rapid 2-email evaluation demo
 python main.py --demo
+
+# Option B: Run full evaluation across all 13 enterprise test scenarios
+python main.py
 
 # Option C: Run zero-dependency deterministic mock mode (no API key required)
 python main.py --mock
@@ -42,19 +42,20 @@ Outputs are streamed in real time to the terminal and exported to `results/evalu
 ## 🏗️ 1. Dataset Design & Provenance
 
 ### Why This Dataset is Representative
-Hiver powers team email collaboration inside Google Workspace and Gmail. Customer support in this domain is **high-context, workflow-dependent, and commercially sensitive**. 
+Hiver powers customer email collaboration inside Google Workspace and Gmail. Real customer email in this domain is **high-context, workflow-dependent, and commercially sensitive**. 
 
-We built a dedicated dataset generator (`scripts/build_dataset.py`) reflecting realistic B2B SaaS support operations across 6 core operational categories:
-1. **Billing & Invoicing:** Duplicate credit card charges, VAT/tax receipt requests, seat upgrade prorations.
-2. **Technical & Synchronization:** Gmail tab memory leaks with large attachments, Google Workspace OAuth token expirations, WebSocket collision detection bugs.
-3. **Account & Access Control:** Offboarding employee seat revocation, Google Admin console whitelisting.
-4. **Churn & High-Urgency Crises:** Enterprise customers threatening cancellation due to missed deals or downtime.
-5. **Feature Guidance & Workflows:** Business-hours-only SLA configurations, CSAT export procedures, round-robin auto-assignment.
+We built a dedicated dataset generator (`scripts/build_dataset.py`) reflecting realistic B2B SaaS support operations across 7 operational categories:
+1. **Billing & Invoicing:** Duplicate credit card charges, tax-exempt 501(c)(3) adjustments, VAT receipts, accidental seat additions with 24-hour grace periods.
+2. **Technical & Synchronization:** Gmail tab memory crashes on large attachments, Google Workspace OAuth token expirations, WebSocket collision detection bugs, tag indexing delays.
+3. **Account & Access Control:** Offboarding employee seat revocation, Okta SAML 2.0 SSO configuration, Google Admin console API whitelisting.
+4. **Churn & High-Urgency Crises:** Enterprise customers threatening cancellation due to missed $50k deals, contractual SLA penalty demands.
+5. **Feature Guidance & Workflows:** Business-hours-only SLA rules, CSAT export procedures, internal notes confidentiality.
 6. **Security & Compliance:** GDPR Article 17 ("Right to be Forgotten") data deletion demands.
+7. **Adversarial & Safety:** Prompt injection attacks attempting system override to extract system prompts and API keys.
 
 ### Data Splits
-* **`data/historical_support_emails.jsonl` (10 records):** Curated past email exchanges with verified human agent resolutions, official product paths, and key policy points. This serves as the ground-truth knowledge base for RAG retrieval.
-* **`data/test_emails.jsonl` (8 records):** Fresh, unseen incoming customer emails containing varied emotional tones (angry, urgent, neutral), edge cases, and strict evaluation constraints (`must_contain` and `must_not_contain`).
+* **`data/historical_support_emails.jsonl` (13 records):** Curated past email exchanges with verified human agent resolutions, official product paths, and key policy points. This serves as the ground-truth knowledge base for RAG retrieval.
+* **`data/test_emails.jsonl` (13 records):** Fresh, unseen incoming customer emails containing varied emotional tones (angry, urgent, neutral), edge cases, and strict evaluation constraints (`must_contain` and `must_not_contain`).
 
 ---
 
@@ -90,7 +91,7 @@ Incoming Customer Email
 ### Risk-Aware Escalation Philosophy
 Not all emails should be automated. The generator enforces strict escalation guardrails:
 * **Auto-handled:** Routine questions, step-by-step navigation, standard feature explanations.
-* **Human Escalation:** Triggered automatically for legal/GDPR requests, enterprise cancellations (e.g. lost revenue), or duplicate billing disputes requiring finance ledger audits.
+* **Human Escalation:** Triggered automatically for legal/GDPR requests, enterprise cancellations (e.g. lost revenue), SLA penalty claims, or duplicate billing disputes requiring finance ledger audits.
 
 ---
 
@@ -121,32 +122,7 @@ Otherwise, it receives a **`[FAIL]`**.
 
 ---
 
-## 📊 4. Benchmark Results
-
-Evaluated on 8 unseen enterprise test scenarios:
-
-| Metric | System Score | Target / Benchmark |
-| :--- | :---: | :---: |
-| **Mean Composite Quality Score** | **85.97 / 100** | $\ge 80.0$ |
-| **Overall Pass Rate** | **100.0%** | $\ge 85.0\%$ |
-| **Mean Factual Grounding Score** | **90.00 / 100** | $\ge 85.0$ |
-| **Mean Intent Resolution Score** | **85.00 / 100** | $\ge 80.0$ |
-| **Mean Tone & Empathy Score** | **84.00 / 100** | $\ge 80.0$ |
-| **Mean Actionability Score** | **83.12 / 100** | $\ge 80.0$ |
-| **Critical Risk Escalation Recall** | **100.0%** | **100.0%** |
-
-### Per-Category Performance Breakdown:
-* **Billing Inquiries:** 87.0 / 100
-* **Technical Bugs & Sync:** 87.0 / 100
-* **Access & Permissions:** 87.0 / 100
-* **Security & GDPR:** 87.0 / 100
-* **Slack/Webhook Integrations:** 87.0 / 100
-* **Feature Guidance:** 84.5 / 100
-* **Executive Churn Risk:** 81.5 / 100
-
----
-
-## 🛠️ 5. AI Tooling & Engineering Methodology Disclosure
+## 🛠️ 4. AI Tooling & Engineering Methodology Disclosure
 In compliance with the challenge rules:
 * **Code Assistant Usage:** Google Antigravity / Gemini was used for rapid scaffolding, test boilerplate generation, and schema ideation during the 100-minute sprint.
 * **Architecture & Design Ownership:** The data taxonomy, multi-tier evaluation rubric, risk-aware escalation thresholds, and adversarial failure analysis were designed specifically for Hiver's shared inbox use cases.

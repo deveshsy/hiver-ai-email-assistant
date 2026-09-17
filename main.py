@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from typing import List
 
 from src.schemas import IncomingEmail, SuggestedReply
@@ -26,14 +27,19 @@ def load_test_emails(path: str = "data/test_emails.jsonl") -> List[IncomingEmail
 def print_separator(char="=", width=80):
     print(char * width)
 
-def run_pipeline(demo_mode: bool = False, force_mock: bool = False):
+def run_pipeline(demo_mode: bool = False, force_mock: bool = False, limit: int = 0):
     print_separator()
     print("      HIVER AI EMAIL SUGGESTED-RESPONSE & EVALUATION SYSTEM")
     print_separator()
 
     # 1. Load Data
     all_emails = load_test_emails()
-    test_set = all_emails[:2] if demo_mode else all_emails
+    if demo_mode:
+        test_set = all_emails[:2]
+    elif limit > 0:
+        test_set = all_emails[:limit]
+    else:
+        test_set = all_emails
     print(f"[*] Loaded {len(test_set)} test emails for evaluation (Demo Mode: {demo_mode})")
 
     # 2. Initialize Components
@@ -55,6 +61,10 @@ def run_pipeline(demo_mode: bool = False, force_mock: bool = False):
         reply = generator.generate_reply(email)
         generated_replies.append(reply)
         
+        # Pacing to avoid free-tier API quota spikes
+        if not generator.mock_mode:
+            time.sleep(2.0)
+
         # Evaluate single response
         eval_res = evaluator.evaluate_single_response(email, reply)
 
@@ -70,6 +80,10 @@ def run_pipeline(demo_mode: bool = False, force_mock: bool = False):
         if eval_res.must_not_contain_violations:
             print(f"    VIOLATIONS:    {eval_res.must_not_contain_violations} (-15 penalty applied)")
         print()
+
+        # Pacing between emails
+        if not generator.mock_mode and idx < len(test_set):
+            time.sleep(2.5)
 
     # 4. System-Wide Aggregate Report
     print_separator("=")
@@ -103,6 +117,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Hiver AI Email Response & Accuracy System")
     parser.add_argument("--demo", action="store_true", help="Run quick 2-email evaluation demo")
     parser.add_argument("--mock", action="store_true", help="Run in deterministic mock mode without API calls")
+    parser.add_argument("--limit", type=int, default=0, help="Limit number of emails to evaluate")
     args = parser.parse_args()
 
-    run_pipeline(demo_mode=args.demo, force_mock=args.mock)
+    run_pipeline(demo_mode=args.demo, force_mock=args.mock, limit=args.limit)
