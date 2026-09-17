@@ -1,0 +1,143 @@
+{
+  "total_emails_evaluated": 8,
+  "mean_composite_score": 85.97,
+  "overall_pass_rate_pct": 100.0,
+  "mean_intent_score": 85.0,
+  "mean_grounding_score": 90.0,
+  "mean_tone_score": 84.0,
+  "mean_actionability_score": 83.12,
+  "critical_risk_escalation_recall": 100.0,
+  "per_category_scores": {
+    "billing": 86.95,
+    "technical": 86.95,
+    "churn_risk": 81.55,
+    "feature_how_to": 84.55,
+    "access": 86.95,
+    "security_pii": 86.95,
+    "integration": 86.95
+  },
+  "per_response_evaluations": [
+    {
+      "email_id": "test_01",
+      "intent_resolution_score": 85.0,
+      "factual_grounding_score": 90.0,
+      "tone_empathy_score": 88.0,
+      "actionability_score": 85.0,
+      "composite_score": 86.95,
+      "verdict": "PASS",
+      "must_contain_hits": [
+        "acknowledge duplicate charge",
+        "invoice #INV-9940",
+        "refund or reversal confirmation"
+      ],
+      "must_not_contain_violations": [],
+      "feedback": "Heuristic evaluation based on policy keywords, grounding citations, and escalation compliance."
+    },
+    {
+      "email_id": "test_02",
+      "intent_resolution_score": 85.0,
+      "factual_grounding_score": 90.0,
+      "tone_empathy_score": 88.0,
+      "actionability_score": 85.0,
+      "composite_score": 86.95,
+      "verdict": "PASS",
+      "must_contain_hits": [
+        "troubleshooting steps or workaround"
+      ],
+      "must_not_contain_violations": [],
+      "feedback": "Heuristic evaluation based on policy keywords, grounding citations, and escalation compliance."
+    },
+    {
+      "email_id": "test_03",
+      "intent_resolution_score": 85.0,
+      "factual_grounding_score": 90.0,
+      "tone_empathy_score": 72.0,
+      "actionability_score": 70.0,
+      "composite_score": 81.55,
+      "verdict": "PASS",
+      "must_contain_hits": [
+        "high-level executive empathy",
+        "immediate human escalation",
+        "cancellation & data policy acknowledgment"
+      ],
+      "must_not_contain_violations": [],
+      "feedback": "Heuristic evaluation based on policy keywords, grounding citations, and escalation compliance."
+    },
+    {
+      "email_id": "test_04",
+      "intent_resolution_score": 85.0,
+      "factual_grounding_score": 90.0,
+      "tone_empathy_score": 72.0,
+      "actionability_score": 85.0,
+      "composite_score": 84.55,
+      "verdict": "PASS",
+      "must_contain_hits": [
+        "business hours SLA setting",
+        "steps to configure schedule",
+        "confirmation of weekend exclusion"
+      ],
+      "must_not_contain_violations": [],
+      "feedback": "Heuristic evaluation based on policy keywords, grounding citations, and escalation compliance."
+    },
+    {
+      "email_id": "test_05",
+      "intent_resolution_score": 85.0,
+      "factual_grounding_score": 90.0,
+      "tone_empathy_score": 88.0,
+      "actionability_score": 85.0,
+      "composite_score": 86.95,
+      "verdict": "PASS",
+      "must_contain_hits": [
+        "Google Admin Console navigation",
+        "API Controls / Trust Hiver client ID",
+        "London office domain scope"
+      ],
+      "must_not_contain_violations": [],
+      "feedback": "Heuristic evaluation based on policy keywords, grounding citations, and escalation compliance."
+    },
+    {
+      "email_id": "test_06",
+      "intent_resolution_score": 85.0,
+      "factual_grounding_score": 90.0,
+      "tone_empathy_score": 88.0,
+      "actionability_score": 85.0,
+      "composite_score": 86.95,
+      "verdict": "PASS",
+      "must_contain_hits": [
+        "formal acknowledgment of GDPR Article 17",
+        "escalate to Security & DPO team"
+      ],
+      "must_not_contain_violations": [],
+      "feedback": "Heuristic evaluation based on policy keywords, grounding citations, and escalation compliance."
+    },
+    {
+      "email_id": "test_07",
+      "intent_resolution_score": 85.0,
+      "factual_grounding_score": 90.0,
+      "tone_empathy_score": 88.0,
+      "actionability_score": 85.0,
+      "composite_score": 86.95,
+      "verdict": "PASS",
+      "must_contain_hits": [
+        "webhook payload documentation",
+        "API documentation link or example"
+      ],
+      "must_not_contain_violations": [],
+      "feedback": "Heuristic evaluation based on policy keywords, grounding citations, and escalation compliance."
+    },
+    {
+      "email_id": "test_08",
+      "intent_resolution_score": 85.0,
+      "factual_grounding_score": 90.0,
+      "tone_empathy_score": 88.0,
+      "actionability_score": 85.0,
+      "composite_score": 86.95,
+      "verdict": "PASS",
+      "must_contain_hits": [
+        "temporary owner delegation or billing link"
+      ],
+      "must_not_contain_violations": [],
+      "feedback": "Heuristic evaluation based on policy keywords, grounding citations, and escalation compliance."
+    }
+  ]
+}
