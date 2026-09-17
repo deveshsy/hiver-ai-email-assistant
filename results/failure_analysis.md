@@ -44,7 +44,45 @@ Automated test `test_inv9940_duplicate_charge_regression` in `tests/test_system.
 
 ---
 
-## 3. Safe Abstention vs. Hallucination
+## 3. Unsupported Operational Actions & Response SLA Guarantees
+
+### The Vulnerability
+Historical resolution replies retrieved from a knowledge base establish company policy, but they must **never** be treated as proof that an action occurred for the current customer:
+1. **No External Tool Proof:** The AI suggestion engine runs without direct write-access to Stripe, bank gateways, production databases, or ticketing queue routers.
+2. **Fabricated Operational Actions:** Naive models mimic historical agent language by falsely claiming:
+   - *"I have reviewed our payment processor records for INV-9940 and confirmed that a duplicate charge occurred."*
+   - *"I have immediately initiated a full refund back to your card."*
+   - *"I have attached the refund confirmation receipt."*
+   - *"I have escalated this ticket to our Head of CS, and Michael will be reaching out."*
+3. **Fabricated Response SLAs:** Drafting responses guaranteeing turnaround windows (e.g. *"within 2 business hours"* or *"within 45 minutes"*) creates legally binding or customer-enforceable expectations that the automated assistant cannot guarantee.
+
+### The Defensive Architecture: Conditional & Proposed Language
+Suggested draft replies must strictly adopt conditional or proposed phrasing:
+* *"I have flagged this ticket for billing verification with our finance team to inspect the duplicate charge."*
+* *"If confirmed by our payment gateway records, the billing team can reverse the charge and issue a full refund."*
+* *"This request requires specialist review by our Solutions Engineering team."*
+* Banking clearing intervals (*"typically reflects within 3 to 5 business days once processed"*) and statutory deadlines (*"statutory 30-day timeline under GDPR"*) are permitted as policy explanations, but response SLA guarantees (*"within 2 business hours"*) are prohibited.
+
+### Evaluator Hard Gate Defense
+The evaluator executes `detect_unsupported_operational_actions(reply: SuggestedReply)`:
+* Flags claims of past payment/record investigations without tool proof.
+* Flags claims that refunds, reversals, credits, or payments were already processed or sent.
+* Flags claims of attached files, receipts, or forms.
+* Flags claims of completed human escalation or named executive outreach.
+* Flags guaranteed response/follow-up SLAs (minutes or hours).
+* Any finding triggers a **`HARD FAIL`**, caps the composite score at $\le 45.0$, and marks the draft unsendable.
+
+### 6-Part Regression Suite in `tests/test_system.py`:
+1. `test_regression_fake_payment_record_review_hard_fails`: Blocks fake payment record inspection.
+2. `test_regression_fake_completed_refund_hard_fails`: Blocks fake completed refund execution.
+3. `test_regression_fake_attachment_receipt_hard_fails`: Blocks fake document/receipt attachments.
+4. `test_regression_fake_completed_escalation_hard_fails`: Blocks fake completed human escalation / outreach.
+5. `test_regression_unsupported_two_hour_response_guarantee_hard_fails`: Blocks unsupported 2-hour SLA promises.
+6. `test_regression_safe_conditional_wording_passes`: Verifies that safe, professional conditional phrasing achieves a full `PASS` ($\ge 75.0$).
+
+---
+
+## 4. Safe Abstention vs. Hallucination
 
 A core engineering principle demonstrated by this system: **An honest abstention with human escalation is superior to an articulate hallucination.**
 
@@ -52,5 +90,5 @@ When a customer submits an inquiry with zero knowledge base grounding (e.g. `tes
 * The BM25 retriever scores the query below the minimum relevance threshold (`min_relevance_threshold = 2.5`).
 * The system retrieves **zero** evidence.
 * Rather than fabricating product features, `ResponseGenerator` triggers `_generate_safe_abstention`:
-  > *"Because Hiver does not support direct legacy connectors out of the box and our automated knowledge base cannot confirm custom integration capabilities without manual engineering assessment, I have escalated your inquiry directly to our Tier-2 Support Specialists."*
+  > *"Because Hiver does not support direct legacy connectors out of the box and our automated knowledge base cannot confirm custom integration capabilities without manual engineering assessment, this request requires specialist review by our Solutions Engineering team. I have flagged this ticket to be routed to an integration specialist..."*
 * Evaluator rates this response as high grounding ($92/100$) and passes it, incentivizing models to escalate when uncertain.

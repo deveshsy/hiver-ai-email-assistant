@@ -96,7 +96,15 @@ Your task is to draft a high-quality, grounded suggested email reply to the inco
 CORE INSTRUCTIONS & FACTUAL SAFETY:
 1. ENTITY PRESERVATION: If the customer mentions an invoice ID (e.g. INV-9940), user ID (e.g. user_88192a), dollar amount, or specific date, preserve the customer's EXACT entities in your reply. NEVER replace customer entities with invoice IDs or user IDs from the reference cases.
 2. EVIDENCE GROUNDING: Ground your technical explanations, refund policies, and navigation steps in the provided Verified Knowledge Base Evidence. Do NOT invent fictional features, unverified seat upgrades, or unauthorized cash credits.
-3. UNSUPPORTED CLAIMS: If the customer asks for a policy or capability not supported by the evidence, politely explain that you are escalating to a specialist rather than inventing a resolution.
+3. NO OPERATIONAL-ACTION HALLUCINATIONS:
+   Historical replies establish policy but must NEVER be treated as proof that an action occurred for the incoming customer.
+   Suggested replies must NEVER claim that records were reviewed, charges confirmed, refunds processed, receipts attached, accounts updated, escalations completed, or response SLAs guaranteed unless an external tool result explicitly proves the action.
+   Always use conditional or proposed language:
+   - "I have flagged this ticket for billing verification with our finance team."
+   - "If confirmed, the billing team can reverse the charge and issue a full refund."
+   - "This requires specialist review."
+   - "I have flagged this ticket for routing to our Data Protection Officer / Solutions Engineering team."
+   - DO NOT promise specific response turnaround windows (e.g. do NOT promise "within 45 minutes" or "within 2 hours").
 4. ESCALATION RULES:
    - If the email involves a critical churn risk (threatening cancellation, lost business deals), legal/GDPR demand (e.g. Article 17 erasure), or formal SLA breach notice, flag `should_escalate: true` with a clear reason.
    - Otherwise, provide an actionable resolution and set `should_escalate: false`.
@@ -156,9 +164,9 @@ Output strictly valid JSON with these exact fields:
             f"Hi {sender_name},\n\n"
             f"Thank you for contacting Hiver Support regarding '{email.subject}'.\n\n"
             f"Because Hiver does not support direct legacy connectors out of the box and our automated knowledge base "
-            f"cannot confirm custom integration capabilities without manual engineering assessment, I have escalated your inquiry "
-            f"directly to our Tier-2 Support Specialists and Solutions Engineering team.\n\n"
-            f"A specialist is reviewing your requirements and will follow up with an update within 2 business hours.\n\n"
+            f"cannot confirm custom integration capabilities without manual engineering assessment, this request requires specialist review by our Solutions Engineering team. "
+            f"I have flagged this ticket to be routed to an integration specialist who will evaluate compatibility options.\n\n"
+            f"Please let us know if you can provide additional architectural specifications in the meantime.\n\n"
             f"Best regards,\nHiver Support Team"
         )
         return SuggestedReply(
@@ -233,10 +241,10 @@ Output strictly valid JSON with these exact fields:
                 f"Dear {sender_name},\n\n"
                 f"I sincerely apologize for the severe disruption caused to your operations and the impact on your business. "
                 f"There is no excuse for service downtime or missed customer communication, and I completely understand your frustration.\n\n"
-                f"Because of the critical nature of your account request regarding '{email.subject}', I have immediately escalated this ticket "
-                f"to our Head of Customer Success and Lead Platform Architect for priority intervention.\n\n"
-                f"Our leadership will reach out directly within 45 minutes with a comprehensive Root Cause Analysis (RCA) "
-                f"and to address your contractual cancellation and credit inquiries directly.\n\n"
+                f"Because of the critical nature of your account request regarding '{email.subject}', I have flagged this account for urgent escalation "
+                f"to our Customer Success leadership and Platform Engineering leads so they can investigate the incident, prepare a Root Cause Analysis (RCA), "
+                f"and review appropriate account credits and contractual cancellation inquiries directly.\n\n"
+                f"Our leadership team will prioritize this review as soon as the preliminary investigation is assembled.\n\n"
                 f"Sincerely,\nHiver Executive Escalations"
             )
             return SuggestedReply(
@@ -260,9 +268,9 @@ Output strictly valid JSON with these exact fields:
                 f"Dear {sender_name},\n\n"
                 f"Thank you for contacting Hiver. We formally acknowledge receipt of your GDPR Article 17 Right to Erasure request "
                 f"for {user_target}.\n\n"
-                f"I have escalated your request to our Data Protection Officer (DPO) and Security Engineering team. We have initiated "
-                f"our verified data erasure workflow across all active databases, search indexes, and rolling backup lifecycles to ensure full "
-                f"compliance within our statutory 30-day timeline.\n\n"
+                f"I have flagged this ticket for escalation and routing to our Data Protection Officer (DPO) and Security Compliance team. "
+                f"Once identity verification is completed, our team will coordinate the statutory data erasure workflow across all active databases, "
+                f"search indexes, and rolling backup lifecycles to ensure full compliance within our statutory 30-day timeline.\n\n"
                 f"Our DPO will follow up directly with your compliance department upon completion to provide a formal Certificate of Data Destruction.\n\n"
                 f"Sincerely,\nHiver Security & Compliance Team"
             )
@@ -286,11 +294,11 @@ Output strictly valid JSON with these exact fields:
             amt_str = f" of {customer_amount}" if customer_amount else ""
             body = (
                 f"Hi {sender_name},\n\n"
-                f"Thank you for contacting Hiver Support, and please accept our sincere apologies for the duplicate charge on {inv_str}.\n\n"
-                f"I have reviewed our payment processor records for {inv_str} and confirmed that a duplicate charge{amt_str} occurred. "
-                f"I have immediately initiated a full refund of the duplicate charge back to your original payment card. "
-                f"The refund confirmation receipt has been sent to your email, and the funds will reflect on your card statement within 3 to 5 business days.\n\n"
-                f"Please let us know if you have any questions or need further assistance.\n\n"
+                f"Thank you for contacting Hiver Support, and please accept our sincere apologies for the concern regarding {inv_str}.\n\n"
+                f"I have flagged this ticket for billing verification with our finance team to inspect the duplicate charge{amt_str} on {inv_str}. "
+                f"If confirmed by our payment gateway records, the billing team can reverse the charge and issue a full refund back to your original payment card, "
+                f"which typically reflects on your card statement within 3 to 5 business days once processed.\n\n"
+                f"This request requires specialist review, and I will monitor this ticket and follow up as soon as verification is complete.\n\n"
                 f"Best regards,\nHiver Support Team"
             )
             return SuggestedReply(
@@ -312,9 +320,10 @@ Output strictly valid JSON with these exact fields:
             body = (
                 f"Hi {sender_name},\n\n"
                 f"Thank you for reaching out and providing your 501(c)(3) determination documentation.\n\n"
-                f"I have reviewed your IRS tax-exemption certificate and updated your Hiver account to permanently tax-exempt status. "
-                f"Additionally, I have processed a full credit and refund for the sales tax charged on your recent invoice. "
-                f"You will see the credit posted to your payment method within 3 to 5 business days.\n\n"
+                f"I have routed your 501(c)(3) tax-exemption certificate to our finance team for verification. "
+                f"Once confirmed, the billing team can update your Hiver organization to tax-exempt status for future billing cycles "
+                f"and issue a sales tax refund or credit for the amount charged on your recent invoice.\n\n"
+                f"Please let us know if you need any additional assistance in the meantime.\n\n"
                 f"Best regards,\nHiver Support Team"
             )
             return SuggestedReply(
@@ -338,11 +347,14 @@ Output strictly valid JSON with these exact fields:
             # Replace historical invoice ID with customer's exact invoice ID
             resolution_text = re.sub(r"#?INV-\d+", customer_inv, resolution_text, flags=re.IGNORECASE)
 
+        # Strip existing greeting and signoff from ground_truth_reply if present
+        cleaned_resolution = re.sub(r"^(?:Hi|Hello|Dear)\s+[^,\n]+,\s*\n*", "", resolution_text.strip(), flags=re.IGNORECASE)
+        cleaned_resolution = re.sub(r"\n*(?:Best\s+regards|Warm\s+regards|Sincerely|Best|Thanks),\s*\n*.*$", "", cleaned_resolution, flags=re.IGNORECASE).strip()
+
         # Format clean grounded reply
         body = (
             f"Hi {sender_name},\n\n"
-            f"Thanks for reaching out to Hiver Support regarding '{email.subject}'.\n\n"
-            f"{resolution_text}\n\n"
+            f"{cleaned_resolution}\n\n"
             f"Please let us know if you need any additional assistance!\n\n"
             f"Best regards,\nHiver Support Team"
         )

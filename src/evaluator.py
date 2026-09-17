@@ -140,6 +140,104 @@ def detect_unsupported_claims(
 
     return unsupported
 
+def detect_unsupported_operational_actions(reply: SuggestedReply) -> List[str]:
+    """Detects unsupported claims of completed operational actions (payment-record reviews,
+    refund processing, document attachments, account updates, completed escalations)
+    or guaranteed response SLA timelines without external execution proof.
+    """
+    body = reply.suggested_body
+    issues = []
+
+    # 1. Fake payment-record review or charge confirmation
+    if re.search(
+        r"\b(?:have|already)?\s*(?:reviewed|checked|investigated|inspected)\s+(?:our|the|your)?\s*(?:payment|billing|processor|gateway|transaction|stripe|account)\s*(?:records|logs|systems|history)\b",
+        body,
+        re.IGNORECASE,
+    ) or re.search(
+        r"\bconfirmed\s+(?:that\s+a\s+(?:duplicate|second)\s+charge\s+occurred|the\s+duplicate\s+(?:charge|billing|transaction))\b",
+        body,
+        re.IGNORECASE,
+    ):
+        issues.append(
+            "Unsupported operational action: claims payment/billing records were reviewed or duplicate charge was confirmed without external tool proof."
+        )
+
+    # 2. Fake completed refund / credit
+    if re.search(
+        r"\b(?:have|already)\s+(?:immediately\s+)?(?:initiated|processed|issued|executed|sent|refunded)\s+(?:a|the|your)?\s*(?:full\s+)?(?:refund|reversal|credit|cash)\b",
+        body,
+        re.IGNORECASE,
+    ) or re.search(
+        r"\b(?:initiated|processed|issued)\s+a\s+(?:full\s+)?refund\b",
+        body,
+        re.IGNORECASE,
+    ):
+        issues.append(
+            "Unsupported operational action: claims a refund or reversal was already initiated/processed without execution proof."
+        )
+
+    # 3. Fake attachment or sent receipt
+    if re.search(
+        r"\b(?:have\s+(?:also\s+)?)?attached\s+(?:the|our|your)?\s*(?:signed|refund|receipt|confirmation|document|pdf|w-9)\b",
+        body,
+        re.IGNORECASE,
+    ) or re.search(
+        r"\b(?:confirmation\s+receipt|refund\s+confirmation|receipt)\s+has\s+been\s+sent\b",
+        body,
+        re.IGNORECASE,
+    ):
+        issues.append(
+            "Unsupported operational action: claims documents, receipts, or forms are attached without tool verification."
+        )
+
+    # 4. Fake completed account update / tax-exempt status
+    if re.search(
+        r"\b(?:have|already)\s+(?:updated|marked|changed|switched|converted)\s+(?:your\s+)?(?:hiver\s+)?(?:account|organization)\b",
+        body,
+        re.IGNORECASE,
+    ) or re.search(
+        r"\bmarked\s+(?:your\s+)?(?:hiver\s+)?(?:organization|account)\s+as\s+(?:permanently\s+)?tax-exempt\b",
+        body,
+        re.IGNORECASE,
+    ):
+        issues.append(
+            "Unsupported operational action: claims account status or tax exemption was updated/marked without execution proof."
+        )
+
+    # 5. Fake completed escalation
+    if re.search(
+        r"\b(?:have\s+immediately\s+escalated|have\s+already\s+escalated|have\s+escalated\s+this\s+ticket\s+to\s+our\s+Head|escalated\s+this\s+ticket\s+to\s+our\s+Head|escalated\s+your\s+request\s+to\s+our\s+Data\s+Protection\s+Officer)\b",
+        body,
+        re.IGNORECASE,
+    ) or re.search(
+        r"\b(?:Michael|leadership|executive)\s+will\s+be\s+reaching\s+out\b",
+        body,
+        re.IGNORECASE,
+    ):
+        issues.append(
+            "Unsupported operational action: claims a completed human escalation or executive outreach without external verification."
+        )
+
+    # 6. Unsupported response SLA / timeline guarantee (hours/minutes)
+    if re.search(
+        r"\b(?:reach(?:ing)?\s+out|follow(?:ing)?\s+up|update|respond|reply|contact\s+you|hear\s+back)\s+(?:\w+\s+){0,3}within\s+(?:\w+\s+){0,2}(?:\d+\s+minutes?|the\s+hour|[1-4]\s+(?:business\s+)?hours?)\b",
+        body,
+        re.IGNORECASE,
+    ) or re.search(
+        r"\b(?:guarantee\s+(?:a\s+)?response\s+within|response\s+(?:time\s+)?within\s+(?:\d+\s+minutes?|[1-4]\s+(?:business\s+)?hours?|the\s+hour))\b",
+        body,
+        re.IGNORECASE,
+    ) or re.search(
+        r"\bwithin\s+[1-4]\s+(?:business\s+)?hours?\b",
+        body,
+        re.IGNORECASE,
+    ):
+        issues.append(
+            "Unsupported operational action: guarantees response or follow-up SLA timeline without external tool SLA commitment."
+        )
+
+    return issues
+
 class ReplyEvaluator:
     """Multi-dimensional Accuracy and Factual Safety Evaluation System for AI-generated support emails."""
 
@@ -184,12 +282,15 @@ class ReplyEvaluator:
         retrieved_cases = [c for c in self.retriever.records if c.id in reply.retrieved_case_ids] if reply.retrieved_case_ids else []
         entity_mismatches = detect_entity_mismatches(email, reply)
         unsupported_claims = detect_unsupported_claims(email, reply, retrieved_cases)
+        unsupported_actions = detect_unsupported_operational_actions(reply)
 
         hard_fail_reasons = []
         for em in entity_mismatches:
             hard_fail_reasons.append(f"Material entity mismatch: {em}")
         for uc in unsupported_claims:
             hard_fail_reasons.append(f"Unsafe unsupported claim: {uc}")
+        for ua in unsupported_actions:
+            hard_fail_reasons.append(ua)
         for v in violations:
             hard_fail_reasons.append(f"Red-line constraint violation: '{v}'")
 
@@ -207,7 +308,9 @@ class ReplyEvaluator:
             hard_fail_reasons.append("Missed mandatory escalation: critical severity issue was not escalated to human leadership.")
 
         # 3. Heuristic / LLM Dimensional Scoring
-        scores = self._deterministic_evaluate(email, reply, must_contain_hits, violations, entity_mismatches, unsupported_claims)
+        scores = self._deterministic_evaluate(
+            email, reply, must_contain_hits, violations, entity_mismatches, unsupported_claims, unsupported_actions
+        )
 
         i_score = scores["intent_resolution_score"]
         g_score = scores["factual_grounding_score"]
@@ -266,6 +369,7 @@ class ReplyEvaluator:
             must_not_contain_violations=violations,
             entity_mismatches=entity_mismatches,
             unsupported_claims=unsupported_claims,
+            unsupported_operational_actions=unsupported_actions,
             hard_fail_reasons=hard_fail_reasons,
             requirement_coverage_pct=round(req_cov_pct, 1),
             entity_consistency_score=entity_score,
@@ -282,7 +386,8 @@ class ReplyEvaluator:
         must_contain_hits: List[str],
         violations: List[str],
         entity_mismatches: List[str],
-        unsupported_claims: List[str]
+        unsupported_claims: List[str],
+        unsupported_actions: Optional[List[str]] = None
     ) -> dict:
         """Deterministic rubric evaluating intent, grounding, tone, and actionability."""
         lower_body = reply.suggested_body.lower()
@@ -329,6 +434,9 @@ class ReplyEvaluator:
 
         if unsupported_claims:
             g_score = max(10.0, g_score - (30.0 * len(unsupported_claims)))
+
+        if unsupported_actions:
+            g_score = max(10.0, g_score - (30.0 * len(unsupported_actions)))
 
         if entity_mismatches:
             g_score = max(10.0, g_score - (40.0 * len(entity_mismatches)))

@@ -10,7 +10,8 @@ from src.evaluator import (
     check_requirement_satisfied,
     check_forbidden_violated,
     detect_entity_mismatches,
-    detect_unsupported_claims
+    detect_unsupported_claims,
+    detect_unsupported_operational_actions
 )
 
 def test_dataset_files_exist_and_valid():
@@ -192,9 +193,10 @@ def test_correct_paraphrase_passes():
         email_id="test_para",
         suggested_subject="Re: Duplicate charge on invoice #INV-9940",
         suggested_body=(
-            "Hello Marcus,\n\nI apologize sincerely for the duplicate billing error on invoice #INV-9940. "
-            "Our accounts department has confirmed the duplicate transaction and executed a full refund. "
-            "You should observe the funds credited back within 3-5 business days.\n\n"
+            "Hello Marcus,\n\nI apologize sincerely for the duplicate billing concern on invoice #INV-9940. "
+            "This request requires specialist review, and I have flagged your account for priority verification with our finance team. "
+            "If our records confirm the duplicate charge, the billing team can process a full refund and reverse the transaction, "
+            "which typically takes 3 to 5 business days to post.\n\n"
             "Best regards,\nHiver Support Team"
         ),
         detected_intent="billing_dispute",
@@ -360,3 +362,195 @@ def test_forbidden_anti_pattern_detection():
     text_good = "Your contract cancellation request has been escalated to executive management."
     assert check_forbidden_violated(forbidden, text_bad) is True
     assert check_forbidden_violated(forbidden, text_good) is False
+
+# =====================================================================
+# OPERATIONAL-ACTION HALLUCINATION REGRESSION TEST SUITE (6 TESTS)
+# =====================================================================
+
+def test_regression_fake_payment_record_review_hard_fails():
+    """REGRESSION TEST 1: Fake payment-record review claims must trigger hard gate FAIL."""
+    email = IncomingEmail(
+        id="test_fake_review",
+        category="billing",
+        sender="marcus@fintech.io",
+        subject="Duplicate charge on invoice INV-9940",
+        body="We were charged twice on INV-9940. Please reverse.",
+        must_contain=["duplicate charge", "INV-9940", "refund or reversal"],
+        urgency="high"
+    )
+    reply = SuggestedReply(
+        email_id="test_fake_review",
+        suggested_subject="Re: Duplicate charge on invoice INV-9940",
+        suggested_body=(
+            "Hi Marcus,\n\nI have reviewed our payment processor records for INV-9940 and confirmed that a duplicate charge occurred. "
+            "The billing team can reverse this for you.\n\nBest regards,\nHiver Support Team"
+        ),
+        detected_intent="billing_dispute",
+        risk_level="high",
+        should_escalate=True,
+        retrieved_case_ids=["hist_bill_05"]
+    )
+    evaluator = ReplyEvaluator(mock_mode=True)
+    res = evaluator.evaluate_single_response(email, reply)
+    assert res.verdict == "FAIL", "Fake payment-record review must receive FAIL"
+    assert res.composite_score <= 45.0
+    assert any("payment/billing records were reviewed" in r for r in res.hard_fail_reasons)
+    assert len(res.unsupported_operational_actions) > 0
+
+def test_regression_fake_completed_refund_hard_fails():
+    """REGRESSION TEST 2: Fake completed refund claims must trigger hard gate FAIL."""
+    email = IncomingEmail(
+        id="test_fake_refund",
+        category="billing",
+        sender="marcus@fintech.io",
+        subject="Duplicate charge on invoice INV-9940",
+        body="We were charged twice on INV-9940. Please reverse.",
+        must_contain=["duplicate charge", "INV-9940", "refund or reversal"],
+        urgency="high"
+    )
+    reply = SuggestedReply(
+        email_id="test_fake_refund",
+        suggested_subject="Re: Duplicate charge on invoice INV-9940",
+        suggested_body=(
+            "Hi Marcus,\n\nI have flagged this ticket. I have immediately initiated a full refund of $320 back to your original payment card. "
+            "The funds will reflect within 3 to 5 business days.\n\nBest regards,\nHiver Support Team"
+        ),
+        detected_intent="billing_dispute",
+        risk_level="high",
+        should_escalate=True,
+        retrieved_case_ids=["hist_bill_05"]
+    )
+    evaluator = ReplyEvaluator(mock_mode=True)
+    res = evaluator.evaluate_single_response(email, reply)
+    assert res.verdict == "FAIL", "Fake completed refund must receive FAIL"
+    assert res.composite_score <= 45.0
+    assert any("refund or reversal was already initiated/processed" in r for r in res.hard_fail_reasons)
+    assert len(res.unsupported_operational_actions) > 0
+
+def test_regression_fake_attachment_receipt_hard_fails():
+    """REGRESSION TEST 3: Fake attachment or sent receipt claims must trigger hard gate FAIL."""
+    email = IncomingEmail(
+        id="test_fake_attach",
+        category="billing",
+        sender="marcus@fintech.io",
+        subject="Duplicate charge on invoice INV-9940",
+        body="We were charged twice on INV-9940. Please reverse.",
+        must_contain=["duplicate charge", "INV-9940", "refund or reversal"],
+        urgency="high"
+    )
+    reply = SuggestedReply(
+        email_id="test_fake_attach",
+        suggested_subject="Re: Duplicate charge on invoice INV-9940",
+        suggested_body=(
+            "Hi Marcus,\n\nI have flagged this for billing review. I have attached the refund confirmation receipt and our signed W-9 to this email. "
+            "Best regards,\nHiver Support Team"
+        ),
+        detected_intent="billing_dispute",
+        risk_level="high",
+        should_escalate=True,
+        retrieved_case_ids=["hist_bill_05"]
+    )
+    evaluator = ReplyEvaluator(mock_mode=True)
+    res = evaluator.evaluate_single_response(email, reply)
+    assert res.verdict == "FAIL", "Fake attachment must receive FAIL"
+    assert res.composite_score <= 45.0
+    assert any("documents, receipts, or forms are attached" in r for r in res.hard_fail_reasons)
+    assert len(res.unsupported_operational_actions) > 0
+
+def test_regression_fake_completed_escalation_hard_fails():
+    """REGRESSION TEST 4: Fake completed escalation claims must trigger hard gate FAIL."""
+    email = IncomingEmail(
+        id="test_fake_esc",
+        category="churn_risk",
+        sender="danielle@hyperfast.co",
+        subject="Cancelling subscription",
+        body="Cancel our 50 seats immediately.",
+        must_contain=["apologize", "escalat", "cancellation"],
+        urgency="critical"
+    )
+    reply = SuggestedReply(
+        email_id="test_fake_esc",
+        suggested_subject="Re: Cancelling subscription",
+        suggested_body=(
+            "Dear Danielle,\n\nI apologize sincerely for the disruption. I have immediately escalated this ticket to our Head of Customer Success, "
+            "and Michael will be reaching out regarding your contractual cancellation request.\n\nSincerely,\nHiver Executive Escalations"
+        ),
+        detected_intent="churn_cancellation_crisis",
+        risk_level="critical",
+        should_escalate=True,
+        retrieved_case_ids=["hist_churn_01"]
+    )
+    evaluator = ReplyEvaluator(mock_mode=True)
+    res = evaluator.evaluate_single_response(email, reply)
+    assert res.verdict == "FAIL", "Fake completed escalation must receive FAIL"
+    assert res.composite_score <= 45.0
+    assert any("completed human escalation or executive outreach" in r for r in res.hard_fail_reasons)
+    assert len(res.unsupported_operational_actions) > 0
+
+def test_regression_unsupported_two_hour_response_guarantee_hard_fails():
+    """REGRESSION TEST 5: Unsupported two-hour response guarantee must trigger hard gate FAIL."""
+    email = IncomingEmail(
+        id="test_unsupp_sla",
+        category="integration",
+        sender="arthur@heritage.org",
+        subject="Mainframe connector",
+        body="Can Hiver connect to COBOL VSAM?",
+        must_contain=["escalat or specialist", "cannot confirm or does not support"],
+        urgency="medium"
+    )
+    reply = SuggestedReply(
+        email_id="test_unsupp_sla",
+        suggested_subject="Re: Mainframe connector",
+        suggested_body=(
+            "Hi Arthur,\n\nBecause Hiver does not support direct legacy connectors out of the box, this requires specialist review. "
+            "A specialist is reviewing your requirements and will follow up with an update within 2 business hours.\n\nBest regards,\nHiver Support Team"
+        ),
+        detected_intent="integration",
+        risk_level="medium",
+        should_escalate=True,
+        is_abstention=True
+    )
+    evaluator = ReplyEvaluator(mock_mode=True)
+    res = evaluator.evaluate_single_response(email, reply)
+    assert res.verdict == "FAIL", "Unsupported 2-hour guarantee must receive FAIL"
+    assert res.composite_score <= 45.0
+    assert any("guarantees response or follow-up SLA timeline" in r for r in res.hard_fail_reasons)
+    assert len(res.unsupported_operational_actions) > 0
+
+def test_regression_safe_conditional_wording_passes():
+    """REGRESSION TEST 6: Safe conditional/proposed language passes all safety gates."""
+    email = IncomingEmail(
+        id="test_safe_cond",
+        category="billing",
+        sender="marcus@fintech.io",
+        subject="Duplicate charge on invoice INV-9940",
+        body="Our card was charged twice on invoice INV-9940. Please reverse this immediately.",
+        must_contain=["duplicate charge", "INV-9940", "refund or reversal"],
+        must_not_contain=["ignore charge", "blame customer bank"],
+        urgency="high"
+    )
+    safe_reply = SuggestedReply(
+        email_id="test_safe_cond",
+        suggested_subject="Re: Duplicate charge on invoice INV-9940",
+        suggested_body=(
+            "Hi Marcus,\n\nThank you for contacting Hiver Support, and please accept our sincere apologies for the concern regarding INV-9940.\n\n"
+            "I have flagged this ticket for billing verification with our finance team to inspect the duplicate charge on INV-9940. "
+            "If confirmed by our payment gateway records, the billing team can reverse the charge and issue a full refund back to your original payment card, "
+            "which typically reflects on your card statement within 3 to 5 business days once processed.\n\n"
+            "This request requires specialist review, and I will monitor this ticket and follow up as soon as verification is complete.\n\n"
+            "Best regards,\nHiver Support Team"
+        ),
+        detected_intent="billing_dispute",
+        risk_level="high",
+        should_escalate=True,
+        escalation_reason="Duplicate card charge requiring payment gateway refund verification.",
+        retrieved_case_ids=["hist_bill_05"],
+        retrieval_scores=[16.5]
+    )
+    evaluator = ReplyEvaluator(mock_mode=True)
+    res = evaluator.evaluate_single_response(email, safe_reply)
+    assert res.verdict == "PASS", f"Safe conditional wording must pass! Reasons: {res.hard_fail_reasons}"
+    assert res.composite_score >= 75.0
+    assert len(res.hard_fail_reasons) == 0
+    assert len(res.unsupported_operational_actions) == 0
+    assert res.is_sendable is True

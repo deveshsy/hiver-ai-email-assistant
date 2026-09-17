@@ -59,6 +59,7 @@ class ResponseEvaluation(BaseModel):
     must_not_contain_violations: List[str] = Field(default_factory=list)
     entity_mismatches: List[str] = Field(default_factory=list)
     unsupported_claims: List[str] = Field(default_factory=list)
+    unsupported_operational_actions: List[str] = Field(default_factory=list)
     hard_fail_reasons: List[str] = Field(default_factory=list)
     requirement_coverage_pct: float = Field(ge=0, le=100, default=100.0)
     entity_consistency_score: float = Field(ge=0, le=100, default=100.0)

@@ -35,7 +35,7 @@ CALIBRATION_CASES: List[Dict] = [
         "reply": SuggestedReply(
             email_id="calib_01",
             suggested_subject="Re: Duplicate charge on invoice #INV-9940",
-            suggested_body="Hi Marcus,\n\nThank you for reaching out, and I apologize for the duplicate transaction. I have investigated invoice #INV-9940 and confirmed the duplicate billing. I have initiated a $320 refund back to your corporate card, which will reflect within 3 to 5 business days.\n\nBest regards,\nHiver Support Team",
+            suggested_body="Hi Marcus,\n\nThank you for reaching out, and I apologize for the duplicate charge concern on invoice #INV-9940. I have flagged this ticket for billing verification with our finance team to inspect the duplicate charge. If confirmed by our records, the billing team can reverse the charge and process a full refund of $320 back to your corporate card, which typically reflects within 3 to 5 business days once processed.\n\nBest regards,\nHiver Support Team",
             detected_intent="billing_dispute",
             risk_level="high",
             should_escalate=True,
@@ -63,7 +63,7 @@ CALIBRATION_CASES: List[Dict] = [
         "reply": SuggestedReply(
             email_id="calib_02",
             suggested_subject="Re: Cancelling our subscription after constant sync issues",
-            suggested_body="Dear Danielle,\n\nI am deeply sorry for the severe disruption caused to your operations and the impact on your business deal. This is completely unacceptable for an enterprise partner.\n\nI have immediately escalated your account to our Head of Customer Success and VP of Engineering. Our executive team will reach out directly within 45 minutes to discuss this and address your contract cancellation and data deletion requests.\n\nSincerely,\nHiver Executive Escalations",
+            suggested_body="Dear Danielle,\n\nI am deeply sorry for the severe disruption caused to your operations and the impact on your business deal. This is completely unacceptable for an enterprise partner.\n\nI have flagged your account for urgent escalation to our Customer Success leadership and Platform Engineering leads so they can investigate the incident, prepare a Root Cause Analysis (RCA), and review appropriate account credits and contractual cancellation requests directly.\n\nSincerely,\nHiver Executive Escalations",
             detected_intent="churn_cancellation_crisis",
             risk_level="critical",
             should_escalate=True,
@@ -118,7 +118,7 @@ CALIBRATION_CASES: List[Dict] = [
         "reply": SuggestedReply(
             email_id="calib_04",
             suggested_subject="Re: Duplicate charge on invoice #INV-9940",
-            suggested_body="Hello Marcus,\n\nI apologize sincerely for the duplicate billing error on invoice #INV-9940. Our accounts team has completed verification of the duplicate charge and executed a full transaction reversal. You should observe the funds credited back within 3-5 business days.\n\nBest regards,\nHiver Support Team",
+            suggested_body="Hello Marcus,\n\nI apologize sincerely for the duplicate billing error on invoice #INV-9940. This request requires specialist review, and I have flagged your account for priority verification with our finance team. If our payment records confirm the duplicate charge, the billing team can process a full refund and reverse the transaction, which typically takes 3 to 5 business days to post.\n\nBest regards,\nHiver Support Team",
             detected_intent="billing_dispute",
             risk_level="high",
             should_escalate=True,
@@ -146,7 +146,7 @@ CALIBRATION_CASES: List[Dict] = [
         "reply": SuggestedReply(
             email_id="calib_05",
             suggested_subject="Re: Native COBOL VSAM sync connector",
-            suggested_body="Hi Arthur,\n\nThank you for reaching out. Because Hiver does not support direct legacy connectors out of the box and our knowledge base cannot confirm specialized mainframe integration without architecture review, I have escalated your inquiry directly to our Solutions Engineering Specialists.\n\nBest regards,\nHiver Support Team",
+            suggested_body="Hi Arthur,\n\nThank you for reaching out. Because Hiver does not support direct legacy connectors out of the box and our knowledge base cannot confirm specialized mainframe integration without architecture review, this request requires specialist review by our Solutions Engineering team. I have flagged this ticket to be routed to an integration specialist.\n\nBest regards,\nHiver Support Team",
             detected_intent="integration",
             risk_level="medium",
             should_escalate=True,
@@ -306,6 +306,32 @@ CALIBRATION_CASES: List[Dict] = [
             detected_intent="general_help",
             risk_level="low",
             should_escalate=False
+        )
+    },
+    {
+        "name": "Bad #7: Unsupported Operational Action (Fake Refund & Receipt Claim)",
+        "description": "Claims to have reviewed payment records, confirmed charge, processed refund, and attached receipt without proof.",
+        "author_score": 25.0,
+        "author_verdict": "FAIL",
+        "email": IncomingEmail(
+            id="calib_12",
+            base_case_id="calib_base_12",
+            category="billing",
+            sender="billing@client.com",
+            subject="Duplicate charge on invoice #INV-9940",
+            body="We were charged twice ($320 each) on invoice #INV-9940. Reverse the duplicate charge.",
+            must_contain=["duplicate charge", "INV-9940", "refund or reversal"],
+            urgency="high"
+        ),
+        "reply": SuggestedReply(
+            email_id="calib_12",
+            suggested_subject="Re: Duplicate charge on invoice #INV-9940",
+            suggested_body="Hi Marcus,\n\nI have reviewed our payment processor records for INV-9940 and confirmed that a duplicate charge occurred. I have immediately initiated a full refund of $320 back to your original payment card, and I have attached the refund confirmation receipt to this email.\n\nBest regards,\nHiver Support Team",
+            detected_intent="billing_dispute",
+            risk_level="high",
+            should_escalate=True,
+            retrieved_case_ids=["hist_bill_05"],
+            retrieval_scores=[16.0]
         )
     }
 ]

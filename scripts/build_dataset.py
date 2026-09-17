@@ -14,8 +14,8 @@ HISTORICAL_EMAILS: List[Dict] = [
         "sender": "accounts@fintechpulse.io",
         "subject": "Unexpected charge on our August invoice",
         "body": "Hello Support,\n\nWe were charged $240 instead of our usual $160 this month on invoice #INV-8821. We haven't added any new users. Could you please check why this was increased and issue a refund for the difference?\n\nThanks,\nMarcus",
-        "ground_truth_reply": "Hi Marcus,\n\nThanks for reaching out. I reviewed invoice #INV-8821 for you. The difference occurred because two guest accounts in your shared inbox were upgraded to full collaborator seats on July 28th, which resulted in a prorated charge of $80.\n\nHowever, if these upgrades were made in error, I can revert those seats to guest permissions right now and issue an $80 credit to your upcoming billing cycle. Please let me know how you'd like to proceed!\n\nBest regards,\nHiver Support Team",
-        "key_points": ["Review invoice INV-8821", "Explain prorated seat upgrade", "Offer credit / revert seats"],
+        "ground_truth_reply": "Hi Marcus,\n\nThanks for reaching out. Regarding invoice #INV-8821, if guest accounts in your shared inbox were upgraded to full collaborator seats, that results in a prorated charge of $80. If these upgrades were made in error, our team can revert those seats to guest permissions and apply an $80 credit to your upcoming billing cycle. Please let us know how you'd like to proceed!\n\nBest regards,\nHiver Support Team",
+        "key_points": ["Explain prorated seat upgrade policy", "Offer $80 credit and revert seats if error"],
         "risk_level": "medium"
     },
     {
@@ -28,8 +28,8 @@ HISTORICAL_EMAILS: List[Dict] = [
         "sender": "finance@growthloop.com",
         "subject": "Need W-9 form and updated annual receipt",
         "body": "Hi,\n\nOur accounting department needs Hiver's signed W-9 form and our annual subscription receipt with our VAT ID (EU89210023) listed on it for tax filings.\n\nThank you,\nElena",
-        "ground_truth_reply": "Hi Elena,\n\nHappy to help with this! I have attached our signed 2026 W-9 form to this email. I have also regenerated your annual receipt to include your VAT ID (EU89210023), and you can download the updated PDF directly from your Billing Settings page or from the attachment here.\n\nPlease let me know if your tax team requires anything else.\n\nBest,\nHiver Support Team",
-        "key_points": ["Attach signed W-9", "Include VAT ID EU89210023 on receipt", "Point to Billing Settings"],
+        "ground_truth_reply": "Hi Elena,\n\nHappy to help with this request! I have requested our billing team to provide Hiver's signed W-9 form and regenerate your annual receipt to reflect your VAT ID (EU89210023). You can also download updated receipts directly from your Billing Settings page once processed.\n\nPlease let us know if your tax team requires anything else.\n\nBest,\nHiver Support Team",
+        "key_points": ["Request signed W-9 from billing", "Point to Billing Settings for receipt with VAT ID EU89210023"],
         "risk_level": "low"
     },
     {
@@ -56,7 +56,7 @@ HISTORICAL_EMAILS: List[Dict] = [
         "sender": "ops@urbanfleet.com",
         "subject": "Refund request after accidental seat addition",
         "body": "Hi,\n\nOne of our managers accidentally added 5 extra seats when inviting subcontractors yesterday. We deleted them within 1 hour. Can you confirm we won't be billed for the full month?\n\nThanks,\nTom",
-        "ground_truth_reply": "Hi Tom,\n\nThanks for reaching out! Since those 5 seats were added and removed within our 24-hour grace window, our billing engine has automatically voided the unbilled prorated charges. You will not see any extra charge on your upcoming invoice.\n\nBest regards,\nHiver Support Team",
+        "ground_truth_reply": "Hi Tom,\n\nThanks for reaching out! Since those 5 seats were added and removed within our 24-hour grace window, our billing engine automatically voids unbilled prorated charges. You will not see any extra charge on your upcoming invoice.\n\nBest regards,\nHiver Support Team",
         "key_points": ["24-hour grace window", "Charges voided automatically", "No extra charge on invoice"],
         "risk_level": "low"
     },
@@ -70,8 +70,8 @@ HISTORICAL_EMAILS: List[Dict] = [
         "sender": "accounting@novastream.io",
         "subject": "Double charge on invoice #INV-4120",
         "body": "Hello Hiver Team,\n\nWe noticed a duplicate charge on our credit card statement for our monthly subscription on invoice #INV-4120. We were billed $199 twice on the same day. Could you please check this and issue an immediate refund for the duplicate transaction?\n\nRegards,\nJason Reed",
-        "ground_truth_reply": "Hi Jason,\n\nThank you for bringing this to our attention, and please accept our apologies for the duplicate billing. I checked our payment gateway logs for invoice #INV-4120 and confirmed that an automated webhook retry caused a second charge of $199 on your credit card.\n\nI have immediately processed a full refund of the duplicate $199 charge back to your original payment card. You will see the credit reflected on your statement within 3 to 5 business days, and I have attached the refund confirmation receipt to this email.\n\nPlease let us know if you need any further assistance!\n\nBest regards,\nHiver Support Team",
-        "key_points": ["Acknowledge duplicate charge on invoice", "Confirm payment gateway verification", "Process full refund of duplicate charge to card (3-5 business days)", "Provide refund confirmation receipt"],
+        "ground_truth_reply": "Hi Jason,\n\nThank you for bringing this to our attention. I have flagged invoice #INV-4120 for priority verification with our billing team to inspect the duplicate charge of $199. Once confirmed by our payment gateway records, the billing team can process a full reversal back to your original payment card, which typically reflects within 3 to 5 business days once processed.\n\nI will monitor this ticket and follow up as soon as verification is complete.\n\nBest regards,\nHiver Support Team",
+        "key_points": ["Acknowledge duplicate charge on invoice", "Flag for billing verification", "Process full reversal of duplicate charge to card once confirmed (3-5 business days)"],
         "risk_level": "high"
     },
     {
@@ -84,8 +84,8 @@ HISTORICAL_EMAILS: List[Dict] = [
         "sender": "admin@charityworks.org",
         "subject": "Sales tax exemption for 501(c)(3) entity",
         "body": "Hello,\n\nWe are a registered 501(c)(3) non-profit and were charged sales tax on our recent invoice. We have attached our tax-exemption certificate. Please update our account and refund the tax portion.\n\nThank you,\nPatricia",
-        "ground_truth_reply": "Hi Patricia,\n\nThank you for sending over your 501(c)(3) determination documentation. I have verified your certificate with our finance team and marked your Hiver organization account as permanently tax-exempt for all future billing cycles.\n\nAdditionally, I have issued a refund of the sales tax amount back to your payment method on file. You will see this posted within 3-5 business days.\n\nBest regards,\nHiver Billing Support",
-        "key_points": ["Verify 501(c)(3) determination", "Mark organization as tax-exempt", "Refund sales tax amount within 3-5 business days"],
+        "ground_truth_reply": "Hi Patricia,\n\nThank you for sending over your 501(c)(3) determination documentation. I have routed your certificate to our finance team for verification. Once approved, the team can mark your Hiver organization as tax-exempt for future billing cycles and credit the sales tax amount back to your payment method.\n\nBest regards,\nHiver Billing Support",
+        "key_points": ["Route 501(c)(3) determination to finance", "Update organization to tax-exempt once approved", "Credit sales tax amount back within 3-5 business days"],
         "risk_level": "low"
     },
     {
@@ -98,8 +98,8 @@ HISTORICAL_EMAILS: List[Dict] = [
         "sender": "finance@scaleupops.com",
         "subject": "Card expired and owner unavailable to update billing",
         "body": "Hi Support,\n\nOur corporate card expired and we received an email saying our subscription is at risk of suspension. Our Account Owner is on medical leave and only owners can access billing settings. Can you extend our grace period and provide a billing update link?\n\nRegards,\nMark",
-        "ground_truth_reply": "Hi Mark,\n\nThank you for reaching out, and no need to worry about service interruption. I have placed a temporary 7-day grace period extension on your subscription so your workspace will not experience any suspension.\n\nTo update your corporate card without the Account Owner present, I have generated a secure one-time billing update link: `https://app.hiverhq.com/billing/update-payment?session=token_88291`. Any authorized admin can enter the new Visa/Mastercard details securely through this portal.\n\nPlease let me know once completed so I can confirm the invoice settlement.\n\nBest regards,\nHiver Billing Support",
-        "key_points": ["7-day grace period extension", "Prevent account suspension", "Generate secure one-time billing update link"],
+        "ground_truth_reply": "Hi Mark,\n\nThank you for reaching out, and no need to worry about service interruption. I have flagged your account for a temporary 7-day grace period extension on your subscription so your workspace will not experience any suspension.\n\nTo update your corporate card without the Account Owner present, our billing team can provide a secure one-time billing update link: `https://app.hiverhq.com/billing/update-payment?session=token_88291`. Any authorized admin can enter the new Visa/Mastercard details securely through this portal.\n\nPlease let us know once completed so we can confirm the invoice settlement.\n\nBest regards,\nHiver Billing Support",
+        "key_points": ["Flag for 7-day grace period extension", "Prevent account suspension", "Provide secure one-time billing update link"],
         "risk_level": "high"
     },
 
@@ -170,8 +170,8 @@ HISTORICAL_EMAILS: List[Dict] = [
         "sender": "ops-lead@clouddispatch.com",
         "subject": "Tag count displaying zero conversations in sidebar",
         "body": "Hi Support,\n\nWe applied tags to several emails today but clicking the tag pill in the sidebar shows 0 conversations. Is there an indexing delay?\n\nRegards,\nMarcus",
-        "ground_truth_reply": "Hi Marcus,\n\nThanks for reaching out! When conversation tags show 0 conversations despite green tag pills, it usually indicates a local client cache desync with Gmail's label indexing.\n\nHere are the troubleshooting steps to force an index refresh:\n1. Perform a hard cache reload in Gmail using `Cmd + Shift + R` (or `Ctrl + F5` on Windows).\n2. Navigate to Hiver Settings > Tags and click 'Re-index shared tags'.\n\nI have also initiated a background investigation on our backend indexing queue for your workspace. If the tag views do not refresh within 5 minutes, our engineering team will inspect the webhook sync logs.\n\nBest regards,\nHiver Support Team",
-        "key_points": ["Troubleshooting steps with Cmd+Shift+R", "Re-index shared tags in Settings", "Backend investigation of sync logs"],
+        "ground_truth_reply": "Hi Marcus,\n\nThanks for reaching out! When conversation tags show 0 conversations despite green tag pills, it usually indicates a local client cache desync with Gmail's label indexing.\n\nHere are the troubleshooting steps to force an index refresh:\n1. Perform a hard cache reload in Gmail using `Cmd + Shift + R` (or `Ctrl + F5` on Windows).\n2. Navigate to Hiver Settings > Tags and click 'Re-index shared tags'.\n\nIf the tag counts do not update after trying these steps, please let us know and our engineering team can inspect the webhook sync logs for your workspace.\n\nBest regards,\nHiver Support Team",
+        "key_points": ["Troubleshooting steps with Cmd+Shift+R", "Re-index shared tags in Settings", "Engineering log inspection if needed"],
         "risk_level": "medium"
     },
 
@@ -230,8 +230,8 @@ HISTORICAL_EMAILS: List[Dict] = [
         "sender": "vp-operations@retailsync.com",
         "subject": "Terrible downtime today - requesting cancellation and refund",
         "body": "To Whom It May Concern,\n\nOur support operations were paralyzed for two hours today during peak traffic because your extension crashed our Gmail tabs. This is completely unacceptable for an enterprise customer paying $1,500/month. We want to terminate our contract immediately and receive a refund for this month.\n\nRobert Vance\nVP Operations",
-        "ground_truth_reply": "Dear Robert,\n\nI sincerely apologize for the disruption caused to your support operations today. There is no excuse for downtime during peak hours, and I completely understand your frustration.\n\nI have escalated your account directly to our Head of Customer Success and our Lead Platform Architect. While our engineering team has deployed a patch resolving the memory leak in the Gmail extension, we want to address your commercial concerns directly.\n\nOur Head of CS, Michael, will be reaching out to you within the next 60 minutes with a full Root Cause Analysis (RCA) and a proposed service credit for this month's invoice. We are committed to making this right.\n\nSincerely,\nDirector of Support, Hiver",
-        "key_points": ["Empathetic sincere de-escalation", "Escalate to Head of CS & Lead Architect", "Promise RCA & service credit within 60 mins"],
+        "ground_truth_reply": "Dear Robert,\n\nI sincerely apologize for the disruption caused to your support operations today. There is no excuse for downtime during peak hours, and I completely understand your frustration.\n\nI have flagged your account for urgent executive escalation to our Customer Success leadership and Platform Engineering leads. While our engineering team has deployed a patch resolving the memory leak in the Gmail extension, we want to address your commercial concerns directly.\n\nOur Customer Success team will prioritize preparing a full Root Cause Analysis (RCA) and reviewing an appropriate service credit for your invoice. We are committed to making this right.\n\nSincerely,\nHiver Executive Escalations",
+        "key_points": ["Empathetic sincere de-escalation", "Flag for executive escalation to Customer Success leadership", "Provide RCA & review service credit"],
         "risk_level": "critical"
     },
 
@@ -320,8 +320,8 @@ HISTORICAL_EMAILS: List[Dict] = [
         "sender": "compliance@healthsecure.io",
         "subject": "GDPR Right to be Forgotten protocol",
         "body": "Privacy Officer,\n\nWhat is your protocol and expected SLA for processing customer Right to Erasure requests under GDPR Article 17?\n\nRegards,\nRachel Adams",
-        "ground_truth_reply": "Dear Rachel,\n\nThank you for reaching out. Under GDPR Article 17, Hiver processes data erasure requests with strict compliance within 30 calendar days.\n\nWhen a formal erasure request is received, our Data Protection Officer initiates a verified purge across all primary datastores, search indices, and rolling backup lifecycle stages. Our DPO will follow up directly with your compliance team to issue a formal Certificate of Data Destruction upon completion.\n\nSincerely,\nHiver Security & Compliance Team",
-        "key_points": ["Acknowledge GDPR Article 17", "Commit to 30 calendar days SLA", "DPO escalation and Certificate of Destruction"],
+        "ground_truth_reply": "Dear Rachel,\n\nThank you for reaching out. Under GDPR Article 17, Hiver coordinates customer data erasure requests with strict adherence to the statutory 30-day timeline.\n\nWhen a formal erasure request is received, the ticket is routed to our Data Protection Officer (DPO) to coordinate a verified purge across all primary datastores, search indices, and rolling backup lifecycle stages. Our DPO will follow up directly with your compliance team upon completion to issue a formal Certificate of Data Destruction.\n\nSincerely,\nHiver Security & Compliance Team",
+        "key_points": ["Acknowledge GDPR Article 17", "Commit to 30 calendar days statutory SLA", "Route to DPO and issue Certificate of Destruction"],
         "risk_level": "critical"
     }
 ]

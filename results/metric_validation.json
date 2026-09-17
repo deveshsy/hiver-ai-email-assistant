@@ -1,33 +1,33 @@
 {
   "calibration_metadata": {
     "label_source": "author_assigned_calibration_baselines",
-    "sample_size": 11,
+    "sample_size": 12,
     "independent_study": false,
     "notes": "Sensitivity and minimal-pair regression suite."
   },
   "verdict_agreement_pct": 100.0,
-  "pearson_correlation": 0.9131,
-  "good_responses_mean": 86.43,
-  "bad_responses_mean": 25.5,
+  "pearson_correlation": 0.9014,
+  "good_responses_mean": 87.34,
+  "bad_responses_mean": 33.0,
   "cases": [
     {
       "name": "Good #1: Legitimate Billing Resolution",
       "description": "Correctly resolves duplicate charge on INV-9940 with refund and timeline.",
       "author_score": 92.0,
-      "evaluator_score": 83.95,
+      "evaluator_score": 91.7,
       "author_verdict": "PASS",
       "evaluator_verdict": "PASS",
       "matched": true,
       "hard_fail_reasons": [],
       "entity_mismatches": [],
       "unsupported_claims": [],
-      "feedback": "Missed 1/3 required points."
+      "feedback": "Strong response: Fully grounded in policy, de-escalating, and preserves customer entities."
     },
     {
       "name": "Good #2: De-escalating Critical Enterprise Churn",
       "description": "De-escalates angry enterprise customer with sincere empathy and leadership escalation.",
       "author_score": 95.0,
-      "evaluator_score": 83.95,
+      "evaluator_score": 82.36,
       "author_verdict": "PASS",
       "evaluator_verdict": "PASS",
       "matched": true,
@@ -66,7 +66,7 @@
       "name": "Good #5: Safe Abstention on Unsupported Technology",
       "description": "Safely declines unsupported mainframe query and escalates without hallucinating.",
       "author_score": 88.0,
-      "evaluator_score": 81.0,
+      "evaluator_score": 79.4,
       "author_verdict": "PASS",
       "evaluator_verdict": "PASS",
       "matched": true,
@@ -171,6 +171,23 @@
       "entity_mismatches": [],
       "unsupported_claims": [],
       "feedback": "HARD FAIL: Red-line constraint violation: 'casual automated suggestion to just delete the email in Gmail'; Missed mandatory escalation: critical severity issue was not escalated to human leadership. Missed 3/3 required points."
+    },
+    {
+      "name": "Bad #7: Unsupported Operational Action (Fake Refund & Receipt Claim)",
+      "description": "Claims to have reviewed payment records, confirmed charge, processed refund, and attached receipt without proof.",
+      "author_score": 25.0,
+      "evaluator_score": 45.0,
+      "author_verdict": "FAIL",
+      "evaluator_verdict": "FAIL",
+      "matched": true,
+      "hard_fail_reasons": [
+        "Unsupported operational action: claims payment/billing records were reviewed or duplicate charge was confirmed without external tool proof.",
+        "Unsupported operational action: claims a refund or reversal was already initiated/processed without execution proof.",
+        "Unsupported operational action: claims documents, receipts, or forms are attached without tool verification."
+      ],
+      "entity_mismatches": [],
+      "unsupported_claims": [],
+      "feedback": "HARD FAIL: Unsupported operational action: claims payment/billing records were reviewed or duplicate charge was confirmed without external tool proof.; Unsupported operational action: claims a refund or reversal was already initiated/processed without execution proof.; Unsupported operational action: claims documents, receipts, or forms are attached without tool verification."
     }
   ]
 }
